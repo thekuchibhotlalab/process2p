@@ -1,0 +1,13 @@
+imagingType excitatory
+allChannel green,red
+functionalChannel green,red
+landmarkChannel 
+alignmentChannel green
+alignment suite2p
+roiMethod manual
+roiType axon,cell
+tcMethod suite2p
+multiday true
+nPlanes 2
+neuropil mean
+acquisitionRate 30.98

@@ -1,0 +1,14 @@
+imagingType mapping
+allChannel green,red
+functionalChannel green,red
+landmarkChannel 
+alignmentChannel red
+alignment suite2p
+roiMethod manual
+roiType axon,cell
+tcMethod manual
+multiday true
+nPlanes 2
+neuropil mean
+acquisitionRate 30.98
+imagingMode bidi
