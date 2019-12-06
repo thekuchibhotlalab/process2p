@@ -200,16 +200,19 @@ ylabel('dff')
 title('population average dff')
 xlim([0 nFramesPerTone])
 %
+individualPeakFrameFlag = true;
+if individualPeakFrameFlag
 
-
+else
+TCpeak = 
 startFrame = 4;%peakIndex-ceil(6/nPlanes);
 endFrame = 8;%peakIndex+ceil(6/nPlanes);
 peakFrames  = startFrame : endFrame;
 
 
 
-TCtone = TCreorder;
-TCpretone = TCpretoneReorder;
+%TCtone = TCreorder;
+%TCpretone = TCpretoneReorder;
 TCreorder=permute(reshape(TCreorder,nFramesPerTrial,nTrials,nNeuron),[2 1 3]); % now TC reorder is the size of trials*frame a trial * neuron
 
 % use the same basline for all trials, different 
@@ -221,8 +224,8 @@ TCreorder=permute(reshape(TCreorder,nFramesPerTrial,nTrials,nNeuron),[2 1 3]); %
 %TCpretone = TCpretone(:,:,startTrial:end,:);
 %TCpretone = TCpretone ./ repmat(reshape(baseline,[1 1 1 nNeuron]),nFramesPerTone,nTones,nTrials-startTrial+1,1);
 
-TCtrialMean = squeeze(nanmean(TCreorder));
-TCtrialMedian = squeeze(nanmedian(TCreorder));
+TCtrialMean = squeeze(nanmean(TC_reorder));
+TCtrialMedian = squeeze(nanmedian(TC_reorder));
 TCtrialSEM = squeeze(nanstd(TCreorder)./sqrt(nTrials));
 
 TCtoneMean = reshape(TCtrialMean,[nFramesPerTone,nTones,nNeuron]);
