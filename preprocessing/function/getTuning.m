@@ -173,6 +173,13 @@ for i = 1:nTones
         yticklabels([])
     end
 end
+subplot(3,6,18)
+imagesc(toneMean')
+xticks(frameAxis)
+xticklabels(frameLabel)
+xlabel('frames')
+caxis([prctile(trialMean(:),5) prctile(trialMean(:),95)])
+title('all tone')
 %---------PLOT PEAK FRAME-----------
 [maxValue,peakIndex] = max(toneMean(pretoneFrames+1:pretoneFrames+1+frameRate,:),[],1);
 latFig = figure;
@@ -211,45 +218,8 @@ else
     peakFrames = ones(size(peakIndex)) * mode(peakIndex);
 end
 
-%startFrame = 4;%peakIndex-ceil(6/nPlanes);
-%endFrame = 8;%peakIndex+ceil(6/nPlanes);
-%peakFrames  = startFrame : endFrame;
-
-
-
-%TCtone = TCreorder;
-%TCpretone = TCpretoneReorder;
-%TCreorder=permute(reshape(TCreorder,nFramesPerTrial,nTrials,nNeuron),[2 1 3]); % now TC reorder is the size of trials*frame a trial * neuron
-
-% use the same basline for all trials, different 
-% have sem in the tuning curve data
-%Creorder = TCreorder(startTrial:end,:,:); % [nTrials-1,(nFramesPerTone*nTones),nNeuron]
-%baseline = prctile(reshape(TCreorder, [(nTrials-startTrial+1)*nFramesPerTone*nTones,nNeuron]),25);
-%TCreorder = TCreorder ./ repmat(reshape(baseline,[1 1 nNeuron]),nTrials-startTrial+1,nFramesPerTone*nTones,1);
-
-%TCpretone = TCpretone(:,:,startTrial:end,:);
-%TCpretone = TCpretone ./ repmat(reshape(baseline,[1 1 1 nNeuron]),nFramesPerTone,nTones,nTrials-startTrial+1,1);
-
-%TCtrialMean = squeeze(nanmean(TC_reorder));
-%TCtrialMedian = squeeze(nanmedian(TC_reorder));
-%TCtrialSEM = squeeze(nanstd(TCreorder)./sqrt(nTrials));
-
-%TCtoneMean = reshape(TCtrialMean,[nFramesPerTone,nTones,nNeuron]);
-%TCtoneMedian = reshape(TCtrialMedian,[nFramesPerTone,nTones,nNeuron]);
-
-%tuningData = reshape(TCreorder, [nTrials-startTrial+1, nFramesPerTone,nTones,nNeuron]);
-%tuningData = reshape(tuningData(:,peakFrames,:,:),[(nTrials-startTrial+1)*length(peakFrames),nTones,nNeuron]);
-%tuningMean = squeeze(nanmean(tuningData));
-%tuningMedian = squeeze(nanmedian(tuningData));
-%tuningSEM = squeeze(nanstd(tuningData)/sqrt(size(tuningData,1)));
-
-% first do a Anova to test if the cell is responsive to any tones
-% need 18 groups, each group with 8 data points for 8 trials
-% the baseline group is averaged from 8 trials 
-
 peakANOVA = nan((nTrials)*nTones,nTones+1,nNeuron);
 peakANOVACorr = nan((nTrials)*nTones,nTones+1,nNeuron);
-%peakANOVA(:,1,:) = squeeze(nanmean(nanmean(TCpretone(1:pretoneFrames,:,startTrial:nTrials,:))));
 pretoneMean = (nanmean(TCpretone_reorder(1:pretoneFrames,:,:,:)));
 TCpretone_reorderCorr = TCpretone_reorder - repmat(pretoneMean, [nFramesPerTone, 1, 1, 1]);
 for i = 1:nTones
@@ -516,7 +486,7 @@ if true
         for i = 1:neuronEachPlane(j)
             tic;
 
-            tuningFig = figure('visible','off');
+            tuningFig = figure('visible','on');
             cellIndex = currentNeuron(j) + i;
             % REMEMBER TO CHANGE THIS LINE
             %cd([suite2ppath '\plane' num2str(j-1)]);
@@ -573,11 +543,14 @@ if true
             rocAct = [baseAct(:)' peakAct(rocMaxIdx,:)];
             rocLabel = [zeros(1,numel(baseAct)) ones(1,nTrials)];
             [tpr, fpr, threshold] = roc(rocLabel, rocAct);
-            plot(fpr,tpr,'Color', [0 0 0], 'LineWidth', 1.2)
+            h_auc = plot([0 fpr 1],[0 tpr 1],'Color', [0 0 0], 'LineWidth', 1.2)
+            plot([0 1],[0 1],'Color',[0.8,0.8,0.8],'LineWiedth',0.5)
             xlabel('false positive')
             ylabel('true positive')
-            title('roc curve, best tone')
-            legend(['AUC ' num2str(rocMax,'%0.2f')])
+            xlim([0 1])
+            ylim([0 1])
+            title(['ROC ' num2str(round(toneorder(toneindex(i))),'%d') 'HZ'])
+            legend(h_auc,['AUC ' num2str(rocMax,'%0.2f')])
 
             signifTonePoint = anovaSignifToneCorr(:,cellIndex);
             signifTuningMedian = trialMedian(logical(signifTonePoint),cellIndex);
@@ -589,8 +562,8 @@ if true
             subplot(2,2,4)
             freqAxis = log2(sort(toneorder));
             magicNum = sqrt(pi/2);
-            errorbar(freqAxis, trialMedian(:,cellIndex),magicNum * trialSEM(:,cellIndex),'LineWidth',2,'color',[0.0000 0.4470 0.7410]); hold on;
-            errorbar(freqAxis, trialMean(:,cellIndex),trialSEM(:,cellIndex),'LineWidth',2,'color',[0.8500 0.3250 0.0980]);
+            h_med = errorbar(freqAxis, trialMedian(peakFrames(cellIndex),:,cellIndex),magicNum * trialSEM(peakFrames(cellIndex),:,cellIndex),'LineWidth',2,'color',[0.0000 0.4470 0.7410]); hold on;
+            h_mean = errorbar(freqAxis, trialMean(peakFrames(cellIndex),:,cellIndex),trialSEM(peakFrames(cellIndex),:,cellIndex),'LineWidth',2,'color',[0.8500 0.3250 0.0980]);
             scatter(log2(signifTonePoint),signifTuningMedian,40,[0.2 0.2 0.2],'*');
             set(gca, 'XTick', log2([4000 8000 16000 32000 64000]));
             set(gca, 'XTickLabel', [4 8 16 32 64]);
@@ -598,11 +571,11 @@ if true
             xlim([log2(4000) log2(64000)]);
             ylabel('F/F0');
 
-            yaxis right
-            plot(freqAxis,rocAuc)
+            yyaxis right
+            h_roc = plot(freqAxis,rocAuc(:,cellIndex))
             ylabel('AUC')
             
-            legend('Median','Mean','ROC');
+            legend([h_med, h_mean, h_roc],'Median','Mean','ROC');
             title('Tuning Curve');
 
             if responsiveCellFlag(cellIndex)
