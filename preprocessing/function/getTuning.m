@@ -142,12 +142,18 @@ for x=1:nTones
     TCpretone_reorder(:,x,:,:)=TCpretone(:,index,:,:);
 end
 %---------PLOT ALL TONE EVOKED-----------
+trialMean = squeeze(nanmean(TCpretone_reorder,3));
+trialMeanTrialTC = reshape(trialMean,[nFramesPerTrial,nNeuron]);
+trialSEM = squeeze(nanstd(TCpretone_reorder,0,3)) ./sqrt(nTrials);
+trialMedian = squeeze(nanmedian(TCpretone_reorder,3));
+trialMedianTrialTC = reshape(trialMedian,[nFramesPerTrial,nNeuron]);
+toneMean = squeeze(nanmean(nanmean(TCpretone_reorder,2),3));
+%---------PLOT ALL TONE EVOKED-----------
 frameAxis = pretoneFrames:20:nFramesPerTone;
 frameLabel = cellfun(@num2str,num2cell(frameAxis-pretoneFrames),'UniformOutput',false);
 psthFig = figure;
 for i = 1:nTones
     subplot(3,6,i)
-    trialMean = squeeze(nanmean(TCpretone_reorder,3));
     imagesc(squeeze(trialMean(:,i,:))');
     caxis([prctile(trialMean(:),5) prctile(trialMean(:),95)])
     title([num2str(round(toneorder(toneindex(i))),'%d') 'HZ'])
@@ -166,10 +172,7 @@ for i = 1:nTones
         yticklabels([])
     end
 end
-
-
 %---------PLOT PEAK FRAME-----------
-toneMean = squeeze(nanmean(nanmean(TCpretone_reorder,2),3));
 [maxValue,peakIndex] = max(toneMean(pretoneFrames+1:pretoneFrames+1+frameRate,:),[],1);
 latFig = figure;
 subplot(2,2,1)
@@ -202,18 +205,20 @@ xlim([0 nFramesPerTone])
 %
 individualPeakFrameFlag = true;
 if individualPeakFrameFlag
-
+    peakFrames = peakIndex;
 else
-TCpeak = 
-startFrame = 4;%peakIndex-ceil(6/nPlanes);
-endFrame = 8;%peakIndex+ceil(6/nPlanes);
-peakFrames  = startFrame : endFrame;
+    peakFrames = ones(size(peakIndex)) * mode(peakIndex);
+end
+
+%startFrame = 4;%peakIndex-ceil(6/nPlanes);
+%endFrame = 8;%peakIndex+ceil(6/nPlanes);
+%peakFrames  = startFrame : endFrame;
 
 
 
 %TCtone = TCreorder;
 %TCpretone = TCpretoneReorder;
-TCreorder=permute(reshape(TCreorder,nFramesPerTrial,nTrials,nNeuron),[2 1 3]); % now TC reorder is the size of trials*frame a trial * neuron
+%TCreorder=permute(reshape(TCreorder,nFramesPerTrial,nTrials,nNeuron),[2 1 3]); % now TC reorder is the size of trials*frame a trial * neuron
 
 % use the same basline for all trials, different 
 % have sem in the tuning curve data
@@ -224,126 +229,176 @@ TCreorder=permute(reshape(TCreorder,nFramesPerTrial,nTrials,nNeuron),[2 1 3]); %
 %TCpretone = TCpretone(:,:,startTrial:end,:);
 %TCpretone = TCpretone ./ repmat(reshape(baseline,[1 1 1 nNeuron]),nFramesPerTone,nTones,nTrials-startTrial+1,1);
 
-TCtrialMean = squeeze(nanmean(TC_reorder));
-TCtrialMedian = squeeze(nanmedian(TC_reorder));
-TCtrialSEM = squeeze(nanstd(TCreorder)./sqrt(nTrials));
+%TCtrialMean = squeeze(nanmean(TC_reorder));
+%TCtrialMedian = squeeze(nanmedian(TC_reorder));
+%TCtrialSEM = squeeze(nanstd(TCreorder)./sqrt(nTrials));
 
-TCtoneMean = reshape(TCtrialMean,[nFramesPerTone,nTones,nNeuron]);
-TCtoneMedian = reshape(TCtrialMedian,[nFramesPerTone,nTones,nNeuron]);
+%TCtoneMean = reshape(TCtrialMean,[nFramesPerTone,nTones,nNeuron]);
+%TCtoneMedian = reshape(TCtrialMedian,[nFramesPerTone,nTones,nNeuron]);
 
-tuningData = reshape(TCreorder, [nTrials-startTrial+1, nFramesPerTone,nTones,nNeuron]);
-tuningData = reshape(tuningData(:,peakFrames,:,:),[(nTrials-startTrial+1)*length(peakFrames),nTones,nNeuron]);
-tuningMean = squeeze(nanmean(tuningData));
-tuningMedian = squeeze(nanmedian(tuningData));
-tuningSEM = squeeze(nanstd(tuningData)/sqrt(size(tuningData,1)));
+%tuningData = reshape(TCreorder, [nTrials-startTrial+1, nFramesPerTone,nTones,nNeuron]);
+%tuningData = reshape(tuningData(:,peakFrames,:,:),[(nTrials-startTrial+1)*length(peakFrames),nTones,nNeuron]);
+%tuningMean = squeeze(nanmean(tuningData));
+%tuningMedian = squeeze(nanmedian(tuningData));
+%tuningSEM = squeeze(nanstd(tuningData)/sqrt(size(tuningData,1)));
 
 % first do a Anova to test if the cell is responsive to any tones
 % need 18 groups, each group with 8 data points for 8 trials
 % the baseline group is averaged from 8 trials 
 
-peakActANOVA = nan((nTrials-startTrial+1)*nTones,nTones+1,nNeuron);
-%peakActANOVA(:,1,:) = squeeze(nanmean(nanmean(TCpretone(1:pretoneFrames,:,startTrial:nTrials,:))));
-pretoneMean = (nanmean(TCpretone(1:pretoneFrames,:,:,:)));
-TCpretoneCorr = TCpretone - repmat(pretoneMean, [nFramesPerTone, 1, 1, 1]);
+peakANOVA = nan((nTrials)*nTones,nTones+1,nNeuron);
+peakANOVACorr = nan((nTrials)*nTones,nTones+1,nNeuron);
+%peakANOVA(:,1,:) = squeeze(nanmean(nanmean(TCpretone(1:pretoneFrames,:,startTrial:nTrials,:))));
+pretoneMean = (nanmean(TCpretone_reorder(1:pretoneFrames,:,:,:)));
+TCpretone_reorderCorr = TCpretone_reorder - repmat(pretoneMean, [nFramesPerTone, 1, 1, 1]);
 for i = 1:nTones
-    
-    
-    peakActANOVA(((i-1)*(nTrials-startTrial+1)+1):(i*(nTrials-startTrial+1)),i,:) = squeeze(nanmean(TCpretoneCorr(pretoneFrames+peakFrames,i,:,:))) ;
-    peakActANOVA(((i-1)*(nTrials-startTrial+1)+1):(i*(nTrials-startTrial+1)),end,:) = squeeze(nanmean(TCpretoneCorr((pretoneFrames-baselineFrames+1):pretoneFrames,i,:,:)));
+    for j = 1:nNeuron
+        % Although most times we are taking 1 frame, but use nanmean here to allow multiple frames
+        peakANOVA(((i-1)*(nTrials)+1):(i*(nTrials)),i,j) = ...
+            squeeze(nanmean(TCpretone_reorder(pretoneFrames+peakFrames(j),i,:,j),1));
+        peakANOVA(((i-1)*(nTrials)+1):(i*(nTrials)),end,j) = ...
+            squeeze(nanmean(TCpretone_reorder(pretoneFrames,i,:,j),1));
+
+        peakANOVACorr(((i-1)*(nTrials)+1):(i*(nTrials)),i,j) = ...
+            squeeze(nanmean(TCpretone_reorderCorr(pretoneFrames+peakFrames(j),i,:,j),1));
+        peakANOVACorr(((i-1)*(nTrials)+1):(i*(nTrials)),end,j) = ...
+            squeeze(nanmean(TCpretone_reorderCorr(pretoneFrames,i,:,j),1));
+    end
 end
 
-% then do a t test to test if the cell is any-responsive, peak tone responsive vs. baseline
-[~,peakIndex] = max(tuningMedian);
-ttestPeakTone = zeros(2,nNeuron);
-ttestAllTone = zeros(2,nNeuron);
-anovaAllTone = zeros(1,nNeuron);
-Table = zeros(nTones+1, nNeuron +1);
-neuronRespTable(:,1) = [sort(toneorder) 0];
-
-signRankP = zeros(nNeuron,nTones);
-% note fix the t-test here 
 for i = 1:nNeuron
-    peakAct = TCpretone(peakFrames+pretoneFrames,:,:,i);% i.e. 3,(8*17)
-    peakActAvg = squeeze( nanmean(peakAct,1)); 
-    baseAct = TCpretone(1:pretoneFrames,:,:,i);
-    baseActAvg = squeeze( nanmean(baseAct,1));
-    
-    %[h,p] = ttest(peakAct(:),baseAct(:));
-    %ttestAllTone(:,i) = [h;p]; 
-        
-    %peakActPrefTone = squeeze(peakAct(peakIndex(i),:));
-    %baseActPrefTone = squeeze(baseAct(peakIndex(i),:));
-    %[h,p] = ttest(peakActPrefTone,baseActPrefTone);
-    %ttestPeakTone(:,i) = [h;p];
-
-    
+    [~,tempTuningPeak] = max(squeeze(trialMedian(pretoneFrames+peakFrames(i),:,i)));
+    tuningPeak(i) = tempTuningPeak;
+end
+%---------DECLARE ALL MATRICES FOR SIGNIFICANT TESTS-----------
+pairedTestTrials = 2:10; % trial 1 does not have pair for baseline
+% paired ttest for peak-base>0
+ttestToneP = zeros(nTones,nNeuron);
+ttestToneH = zeros(nTones,nNeuron);
+ttestAlpha = 0.005;
+% sign rank test for peak-base>0
+signrankToneP = zeros(nTones,nNeuron);
+signrankToneH = zeros(nTones,nNeuron);
+signrankAlpha = 0.005;
+% anova test for any group difference + at least one tone above baseline
+anovaPeak = zeros(2,nNeuron);
+anovaSignifTone = zeros(nTones,nNeuron);
+anovaPeakCorr = zeros(2,nNeuron);
+anovaSignifToneCorr = zeros(nTones,nNeuron);
+% roc analysis for tone response
+nShuffle = 100;
+rocAuc = zeros(nTones,nNeuron);
+rocTpr = zeros(nTones,nNeuron);
+rocAucZscore = zeros(nTones,nNeuron);
+%---------RUN SIGNIFICANCE TESTS-----------
+for i = 1:nNeuron
+    tic;
+    peakAct = squeeze(TCpretone_reorder(pretoneFrames+peakFrames(i),:,:,i));
+    baseAct = squeeze(TCpretone_reorder(pretoneFrames,:,:,i));
+    % Do paired tests
     for j = 1:nTones
-        [p,h,stats] = signrank(peakActAvg(j,:),baseActAvg(j,:));
-        %signRankH (i,j) = h;
-        signRankP(i,j) = p;
+        [h,p] = ttest(peakAct(j,pairedTestTrials),baseAct(j,pairedTestTrials),'alpha',ttestAlpha,'tail','right');
+        ttestToneP(j,i) = p; 
+        ttestToneH(j,i) = h; 
+        [p,h,stats] = signrank(peakAct(j,pairedTestTrials),baseAct(j,pairedTestTrials),'alpha',signrankAlpha,'tail','right');
+        signrankToneP(j,i) = p;
+        signrankToneH(j,i) = h;
     end
-    
+    % Do ANOVA test
     groupNames = cell(1,nTones+1);
     groupNames{end} = 'Baseline';
     for j = 1:nTones
         groupNames{j} = int2str(toneorder(toneindex(j)));
     end
-    [p,~,stats] = anova1(peakActANOVA(:,:,i),groupNames,'off');
-    anovaAllTone (i) = p;
-    
-    for j = 1:nTones
-%         rocAct = [baseAct(:)' peakActAvg(j,:)];
-%         rocLabel = [zeros(1,numel(baseAct)) ones(1,nTrials)];
-%         [tp, fpr, threshold] = roc(rocAct, rocLabel);
-%         auc = trapz([0 fpr 1],[0 tpr 1]);
-%         auc_all(i,j) = auc;
-%         %nTruePos = ;
-    end
-
+    [p,h,stats] = anova1(peakANOVA(:,:,i),groupNames,'off');
+    anovaPeak (1,i) = p;
     [results,~,~,~] = multcompare(stats,'Display','off');
-    results = results(results(:,2)==18,6);
-    signifTone = (results<0.05);
+    results = results(results(:,2)==(nTones+1),6);
+    anovaSignifTone(:,i) = (results<0.05);
+    anovaPeak (2,i) = p<0.05 && sum(results<0.05)>0;
+
+    [p,h,stats] = anova1(peakANOVACorr(:,:,i),groupNames,'off');
+    anovaPeakCorr (1,i) = p;
+    [results,~,~,~] = multcompare(stats,'Display','off');
+    results = results(results(:,2)==(nTones+1),6);
+    anovaSignifToneCorr(:,i) = (results<0.05);
+    anovaPeakCorr (2,i) = p<0.05 && sum(results<0.05)>0;
     
-    neuronRespTable(1:nTones,i+1) = signifTone;
-    neuronRespTable(end,i+1) = p < 0.05;
-
+    % Do ROC analysis
+    for j = 1:nTones
+        baseAct = squeeze(TCpretone_reorder(pretoneFrames-4:pretoneFrames,:,:,i));
+        rocAct = [baseAct(:)' peakAct(j,:)];
+        rocLabel = [zeros(1,numel(baseAct)) ones(1,nTrials)];
+        [tpr, fpr, threshold] = roc(rocLabel, rocAct);
+        tempAuc = trapz([0 fpr 1],[0 tpr 1]);
+        rocAuc(j,i) = tempAuc;
+        tempFpr = find(fpr<0.05);
+        rocTpr(j,i) = tpr(tempFpr(end));
+        shuffAuc = zeros(1,nShuffle);
+        for k = 1:nShuffle
+            shuffLabel = rocLabel(randperm(length(rocLabel)));
+            [tprShuff, fprShuff, thresholdShuff] = roc(shuffLabel, rocAct);
+            shuffAuc(k) = trapz([0 fprShuff 1],[0 tprShuff 1]);
+        end
+        rocAucZscore(j,i) = (tempAuc - mean(shuffAuc)) / std(shuffAuc);
+    end
+    toc;
 end
 
-%responsiveCellFlag = ttestAllTone(2,:) <= 0.01;% | (ttestPeakTone(1,:) == 1) | (anovaAllTone < 0.05);
-responsiveCellFlag = anovaAllTone < 0.05;
-
-save([savePath '/population/anovaAllTone.mat'],'anovaAllTone');
-save([savePath '/population/responsiveCellFlag.mat'],'responsiveCellFlag');
-save([savePath '/population/ttestPeakTone.mat'],'ttestPeakTone');
-save([savePath '/population/ttestAllTone.mat'],'ttestAllTone');
-save([savePath '/population/responsiveCellFlag.mat'],'responsiveCellFlag');
-save([savePath '/population/neuronRespTable.mat'],'neuronRespTable');
-save([savePath '/population/tuningMean.mat'],'tuningMean'); % JL 05/08/19 for tuning and bandwidth analysis
-save([savePath '/population/tuningMedian.mat'],'tuningMedian'); % JL 05/08/19 for tuning and bandwidth analysis
-save([savePath '/population/tuningData.mat'],'tuningData'); % JL 05/08/19 for tuning and bandwidth analysis
-%% population analysis
-
+%---------SELECT CRITERIA FOR RESPONSIVE CELL-----------
+responsiveCellFlag = anovaPeakCorr(2,:);
+allDataName = {'ttestToneP','ttestToneH','ttestAlpha','signrankToneP',...
+'signrankToneH','signrankAlpha','anovaPeak','anovaSignifTone',...
+'anovaPeakCorr','anovaSignifToneCorr','rocAuc','rocTpr','rocAucZscore'};
+save([savePath '/population/tuning.mat'],allDataName{:});
+%---------PLOT SIGNICANT TEST RESULTS ON POPULATION LEVEL-----------
+tuningPeakIndexMedian = zeros(1,nNeuron);
+tuningPeakIndexMean = zeros(1,nNeuron);
 popTuningPeakMedian = zeros(nTones,1);
-[~,peakIndex] = max(tuningMedian(:,responsiveCellFlag));
-for i = 1:nTones
-    popTuningPeakMedian(i) = sum(peakIndex==i);
+popTuningPeakMean = zeros(nTones,1);
+popTuningMedian = zeros(nTones,nNeuron);
+popTuningMean = zeros(nTones,nNeuron);
+for i = 1:nNeuron
+    if responsiveCellFlag(i)
+
+        [~,tempTuningPeakIndex] = max(squeeze(trialMedian(...
+            pretoneFrames+peakFrames(i),:,i)));
+        tuningPeakIndexMedian(i) = tempTuningPeakIndex;
+
+        [~,tempTuningPeakIndex] = max(squeeze(trialMean(...
+            pretoneFrames+peakFrames(i),:,i)));
+        tuningPeakIndexMean(i) = tempTuningPeakIndex;
+
+        popTuningMedian(:,i) = squeeze(trialMedian(pretoneFrames+peakFrames(i),:,i));
+        popTuningMean(:,i) = squeeze(trialMean(pretoneFrames+peakFrames(i),:,i));
+    else
+        tuningPeakIndexMedian(i) = nan;
+        tuningPeakIndexMean(i) = nan;
+        popTuningMedian(:,i) = nan;
+        popTuningMean(:,i) = nan;
+    end
 end
 
-popTuningPeakMean= zeros(nTones,1);
-[~,peakIndex] = max(tuningMean(:,responsiveCellFlag));
 for i = 1:nTones
-    popTuningPeakMean(i) = sum(peakIndex==i);
+    popTuningPeakMedian(i) = sum(tuningPeakIndexMedian==i);
+    popTuningPeakMean(i) = sum(tuningPeakIndexMean==i);
 end
 
-popTuningMedian = nanmean(tuningMedian(:,responsiveCellFlag)');
-popTuningMean = nanmean(tuningMean(:,responsiveCellFlag)');
+%popTuningPeakMean= zeros(nTones,1);
+%[~,peakIndex] = max(squeeze(trialMean(:,responsiveCellFlag)));
+%for i = 1:nTones
+%    popTuningPeakMean(i) = sum(peakIndex==i);
+%end
+
+%popTuningMedian = squeeze(nanmean(trialMedian(:,responsiveCellFlag),3));
+%popTuningMean = squeeze(nanmean(trialMean(:,responsiveCellFlag),3));
 
 %popTuningStd = std(tuningMean');
 
 figure;
 
 subplot(2,2,2)
-toneRespCount = sum(neuronRespTable(1:end-1,2:end),2);
+toneRespCount = sum(anovaSignifToneCorr,2);
 freqAxis = log2(sort(toneorder));
 plot(freqAxis, toneRespCount,'LineWidth',2);
 set(gca, 'XTick', log2([4000 8000 16000 32000 64000]));
@@ -370,8 +425,8 @@ legend('Median','Mean')
 
 subplot(2,2,3)
 %errorbar(freqAxis, popTuning, popTuningStd,'LineWidth',2);
-plot(freqAxis, popTuningMedian,'LineWidth',2); hold on;
-plot(freqAxis, popTuningMean,'LineWidth',2);
+plot(freqAxis, nanmean(popTuningMedian,2),'LineWidth',2); hold on;
+plot(freqAxis, nanmean(popTuningMean,2),'LineWidth',2);
 set(gca, 'XTick', log2([4000 8000 16000 32000 64000]));
 set(gca, 'XTickLabel', [4 8 16 32 64]);
 xlim([log2(4000) log2(64000)]);
@@ -392,7 +447,7 @@ saveas(gcf,[ savePath ...
   
 %%
 
-[~,peakIndex] = max(tuningMedian);
+%[~,peakIndex] = max(tuningMedian);
 neuronPlane = cumsum(neuronEachPlane);
 neuronPlane = [0 neuronPlane];
 figure;
@@ -490,14 +545,14 @@ if true
             for k = 1:nTrials-startTrial+1
                 tempSampleRate = 2;
                 timeAxis = (0:tempSampleRate:nFramesPerTrial-1) * nPlanes / 30;
-                plot(timeAxis,TCreorder(k,1:tempSampleRate:nFramesPerTrial,cellIndex),'color',[0.9 0.9 0.9],'LineWidth',0.5); hold on
+                plot(timeAxis,TC_reorder(k,1:tempSampleRate:nFramesPerTrial,cellIndex),'color',[0.9 0.9 0.9],'LineWidth',0.5); hold on
             end
 
             timeAxis = (0:nFramesPerTrial-1) * nPlanes / 30;
-            p1 = plot(timeAxis, TCtrialMedian(:,cellIndex),'LineWidth',1.2,'color',[0.0000 0.4470 0.7410]);
-            p2 = plot(timeAxis, TCtrialMean(:,cellIndex),'LineWidth',1.2,'color',[0.8500 0.3250 0.0980]);
-            yMax = 0.7 * max(TCtrialMean(:,cellIndex)) + 0.3 * max(max(TCreorder(:,1:tempSampleRate:nFramesPerTrial,cellIndex)));
-            yMin = 0.7 * min(TCtrialMean(:,cellIndex)) + 0.3 * min(min(TCreorder(:,1:tempSampleRate:nFramesPerTrial,cellIndex)));
+            p1 = plot(timeAxis, trialMedian(peakFrames(cellIndex),:,cellIndex),'LineWidth',1.2,'color',[0.0000 0.4470 0.7410]);
+            p2 = plot(timeAxis, trialMean(peakFrames(cellIndex),:,cellIndex),'LineWidth',1.2,'color',[0.8500 0.3250 0.0980]);
+            yMax = 0.7 * max(trialMean(peakFrames(cellIndex),:,cellIndex)) + 0.3 * max(max(TCreorder(:,1:tempSampleRate:nFramesPerTrial,cellIndex)));
+            yMin = 0.7 * min(trialMean(peakFrames(cellIndex),:,cellIndex)) + 0.3 * min(min(TCreorder(:,1:tempSampleRate:nFramesPerTrial,cellIndex)));
             onsetTime = (1:nFramesPerTone:nFramesPerTrial) * nPlanes / 30;
             for k = 1:nTones
                 plot([onsetTime(k) onsetTime(k)],[yMin yMax],'LineWidth',0.5,'color',[0.4 0.4 0.4]);
