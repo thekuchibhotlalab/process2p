@@ -9,7 +9,7 @@ p = func_createInputParser();
 p.parse(varargin{:});
 sep = '\';
 %---------CHECK NUMBER OF FRAMES IN SBX FILE-----------
-global nTones nTrials nFramesPerTone nFramesPerTrial startTrial nFrames nPlanes
+global nPlanes
 
 nPlanes = str2double(p.Results.nPlanes);
 filename = p.Results.filename;
@@ -114,6 +114,7 @@ pretoneFrames = 10;
 baselineFrames = 5;
 nNeuron = size(TC,2);
 smoothWindow = 3;
+sep = '\';
 
 %---------SHIFT THE TC FOR PRETONE PERIOD-----------
 TC_original = TC; % keep a copy of original TC
@@ -325,8 +326,9 @@ for i = 1:nNeuron
     anovaPeakCorr (2,i) = p<0.05 && sum(results<0.05)>0;
     
     % Do ROC analysis
+    % take only 5 frames before 
+    baseAct = squeeze(TCpretone_reorder(pretoneFrames-4:pretoneFrames,:,:,i));
     for j = 1:nTones
-        baseAct = squeeze(TCpretone_reorder(pretoneFrames-4:pretoneFrames,:,:,i));
         rocAct = [baseAct(:)' peakAct(j,:)];
         rocLabel = [zeros(1,numel(baseAct)) ones(1,nTrials)];
         [tpr, fpr, threshold] = roc(rocLabel, rocAct);
@@ -452,11 +454,9 @@ neuronPlane = cumsum(neuronEachPlane);
 neuronPlane = [0 neuronPlane];
 figure;
 for i = 1:nPlanes
-    cd([suite2ppath '\plane' num2str(i-1)]);
-    data = load('Fall.mat'); 
+    %cd([suite2ppath '\plane' num2str(i-1)]);
+    data = load([suite2ppath sep 'plane' num2str(i-1) sep 'Fall.mat']); 
     refImg = data.ops.meanImg;
-    
-    
     colormapIndex = round(linspace(1,64,17));
     C = colormap('jet');
     
@@ -491,12 +491,12 @@ saveas(gcf,[savePath...
 %saveas(gcf,[tuningFolderName...
 %    '/population/tuningMap.m']);
 
-toneRespTable = zeros(nTones, 4);
-toneRespTable(:,1) = sort(toneorder);
-toneRespTable(:,2) = sum(neuronRespTable(1:end-1,2,:));
-toneRespTable(:,3) = popTuningMedian;
-toneRespTable(:,4) = popTuningMean;
-save([savePath '/population/toneRespTable.mat'],'toneRespTable');
+%toneRespTable = zeros(nTones, 4);
+%toneRespTable(:,1) = sort(toneorder);
+%toneRespTable(:,2) = sum(neuronRespTable(1:end-1,2,:));
+%toneRespTable(:,3) = popTuningMedian;
+%toneRespTable(:,4) = popTuningMean;
+%save([savePath '/population/toneRespTable.mat'],'toneRespTable');
 
 
 
@@ -519,8 +519,8 @@ if true
             tuningFig = figure('visible','off');
             cellIndex = currentNeuron(j) + i;
             % REMEMBER TO CHANGE THIS LINE
-            cd([suite2ppath '\plane' num2str(j-1)]);
-            data = load('Fall.mat'); 
+            %cd([suite2ppath '\plane' num2str(j-1)]);
+            data = load([suite2ppath sep 'plane' num2str(j-1) sep 'Fall.mat']); 
             refImg = data.ops.meanImg;
             subplot(2,2,1)
             imagesc(refImg);colormap gray;hold on;
@@ -534,52 +534,75 @@ if true
             patch(x,y,'g','EdgeColor','none');
             title(['Cell #' int2str(cellIndex) ' Plane #' int2str(j) ' FoV'])
 
-            subplot(2,2,2)
-            plot(TC(:,cellIndex),'LineWidth',0.5);
-            xlim([1 size(TC,1)]);
+            subplot(4,2,2)
+            plot(TC_original(:,cellIndex),'LineWidth',0.5);
+            xlim([1 size(TC_original,1)]);
             xlabel('Frames')
             ylabel('Fluorescence')
             title('Raw Fluorescence')
 
-            subplot(2,2,3)
-            for k = 1:nTrials-startTrial+1
-                tempSampleRate = 2;
-                timeAxis = (0:tempSampleRate:nFramesPerTrial-1) * nPlanes / 30;
-                plot(timeAxis,TC_reorder(k,1:tempSampleRate:nFramesPerTrial,cellIndex),'color',[0.9 0.9 0.9],'LineWidth',0.5); hold on
+            subplot(4,2,4)
+            tempSampleRate = 1;
+            timeAxis = (0:tempSampleRate:nFramesPerTrial-1) * nPlanes / 30;
+            TC_trial = reshape(TC_reorder,[nFramesPerTrial,nTrials,nNeuron]);
+            for k = 1:nTrials     
+                plot(timeAxis,TC_trial(1:tempSampleRate:nFramesPerTrial,k,cellIndex),'color',[0.9 0.9 0.9],'LineWidth',0.5); hold on
             end
 
             timeAxis = (0:nFramesPerTrial-1) * nPlanes / 30;
-            p1 = plot(timeAxis, trialMedian(peakFrames(cellIndex),:,cellIndex),'LineWidth',1.2,'color',[0.0000 0.4470 0.7410]);
-            p2 = plot(timeAxis, trialMean(peakFrames(cellIndex),:,cellIndex),'LineWidth',1.2,'color',[0.8500 0.3250 0.0980]);
-            yMax = 0.7 * max(trialMean(peakFrames(cellIndex),:,cellIndex)) + 0.3 * max(max(TCreorder(:,1:tempSampleRate:nFramesPerTrial,cellIndex)));
-            yMin = 0.7 * min(trialMean(peakFrames(cellIndex),:,cellIndex)) + 0.3 * min(min(TCreorder(:,1:tempSampleRate:nFramesPerTrial,cellIndex)));
+            p1 = plot(timeAxis, trialMedianTrialTC(:,cellIndex),'LineWidth',1.2,'color',[0.0000 0.4470 0.7410]);
+            p2 = plot(timeAxis, trialMeanTrialTC(:,cellIndex),'LineWidth',1.2,'color',[0.8500 0.3250 0.0980]);
+            yMax = 0.7 * max(trialMedianTrialTC(:,cellIndex)) + 0.3 * max(max(TC_trial(1:tempSampleRate:nFramesPerTrial,:,cellIndex)));
+            yMin = 0.7 * min(trialMeanTrialTC(:,cellIndex)) + 0.3 * min(min(TC_trial(1:tempSampleRate:nFramesPerTrial,:,cellIndex)));
             onsetTime = (1:nFramesPerTone:nFramesPerTrial) * nPlanes / 30;
             for k = 1:nTones
                 plot([onsetTime(k) onsetTime(k)],[yMin yMax],'LineWidth',0.5,'color',[0.4 0.4 0.4]);
             end
-            legend([p1, p2],'Median','Mean');
+            %legend([p1, p2],'Median','Mean');
             xlim([0 timeAxis(end)])
             ylim([yMin yMax])
             ylabel('F/F0')
             xlabel('Time(s)')
             title('Mean Activity Across Trials')
 
-            signifTonePoint = neuronRespTable(1:end-1,[1 cellIndex+1]);
-            signifTuningMedian = tuningMedian(:,cellIndex);
-            signifTuningMedian = signifTuningMedian(signifTonePoint(:,2)==1);
-            signifTonePoint = signifTonePoint(signifTonePoint(:,2)==1,1);
+            subplot(2,2,3)
+            [rocMax,rocMaxIdx] = max(rocAuc(:,cellIndex));
+            peakAct = squeeze(TCpretone_reorder(pretoneFrames+peakFrames(i),:,:,i));
+            baseAct = squeeze(TCpretone_reorder(pretoneFrames-4:pretoneFrames,:,:,i));
+
+            rocAct = [baseAct(:)' peakAct(rocMaxIdx,:)];
+            rocLabel = [zeros(1,numel(baseAct)) ones(1,nTrials)];
+            [tpr, fpr, threshold] = roc(rocLabel, rocAct);
+            plot(fpr,tpr,'Color', [0 0 0], 'LineWidth', 1.2)
+            xlabel('false positive')
+            ylabel('true positive')
+            title('roc curve, best tone')
+            legend(['AUC ' num2str(rocMax,'%0.2f')])
+
+            signifTonePoint = anovaSignifToneCorr(:,cellIndex);
+            signifTuningMedian = trialMedian(logical(signifTonePoint),cellIndex);
+            signifTonePoint = toneorder(toneindex(logical(signifTonePoint)));
+            %neuronRespTable(1:end-1,[1 cellIndex+1]);
+            %signifTuningMedian = trialMedian(:,cellIndex);
+            %signifTuningMedian = signifTuningMedian(signifTonePoint(:,2)==1);
+            %signifTonePoint = signifTonePoint(signifTonePoint(:,2)==1,1);
             subplot(2,2,4)
             freqAxis = log2(sort(toneorder));
             magicNum = sqrt(pi/2);
-            errorbar(freqAxis, tuningMedian(:,cellIndex),magicNum * tuningSEM(:,cellIndex),'LineWidth',2,'color',[0.0000 0.4470 0.7410]); hold on;
-            errorbar(freqAxis, tuningMean(:,cellIndex),tuningSEM(:,cellIndex),'LineWidth',2,'color',[0.8500 0.3250 0.0980]);
+            errorbar(freqAxis, trialMedian(:,cellIndex),magicNum * trialSEM(:,cellIndex),'LineWidth',2,'color',[0.0000 0.4470 0.7410]); hold on;
+            errorbar(freqAxis, trialMean(:,cellIndex),trialSEM(:,cellIndex),'LineWidth',2,'color',[0.8500 0.3250 0.0980]);
             scatter(log2(signifTonePoint),signifTuningMedian,40,[0.2 0.2 0.2],'*');
             set(gca, 'XTick', log2([4000 8000 16000 32000 64000]));
             set(gca, 'XTickLabel', [4 8 16 32 64]);
             xlabel('Frequency (kHz)');
-            ylabel('F/F0');
             xlim([log2(4000) log2(64000)]);
-            legend('Median','Mean');
+            ylabel('F/F0');
+
+            yaxis right
+            plot(freqAxis,rocAuc)
+            ylabel('AUC')
+            
+            legend('Median','Mean','ROC');
             title('Tuning Curve');
 
             if responsiveCellFlag(cellIndex)
