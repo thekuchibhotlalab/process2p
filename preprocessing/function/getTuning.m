@@ -491,12 +491,12 @@ saveas(gcf,[savePath...
 %saveas(gcf,[tuningFolderName...
 %    '/population/tuningMap.m']);
 
-toneRespTable = zeros(nTones, 4);
-toneRespTable(:,1) = sort(toneorder);
-toneRespTable(:,2) = sum(neuronRespTable(1:end-1,2,:));
-toneRespTable(:,3) = popTuningMedian;
-toneRespTable(:,4) = popTuningMean;
-save([savePath '/population/toneRespTable.mat'],'toneRespTable');
+%toneRespTable = zeros(nTones, 4);
+%toneRespTable(:,1) = sort(toneorder);
+%toneRespTable(:,2) = sum(neuronRespTable(1:end-1,2,:));
+%toneRespTable(:,3) = popTuningMedian;
+%toneRespTable(:,4) = popTuningMean;
+%save([savePath '/population/toneRespTable.mat'],'toneRespTable');
 
 
 
