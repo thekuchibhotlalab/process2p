@@ -516,7 +516,7 @@ if true
         for i = 1:neuronEachPlane(j)
             tic;
 
-            tuningFig = figure('visible','off');
+            tuningFig = figure('visible','on');
             cellIndex = currentNeuron(j) + i;
             % REMEMBER TO CHANGE THIS LINE
             %cd([suite2ppath '\plane' num2str(j-1)]);
@@ -589,8 +589,8 @@ if true
             subplot(2,2,4)
             freqAxis = log2(sort(toneorder));
             magicNum = sqrt(pi/2);
-            errorbar(freqAxis, trialMedian(:,cellIndex),magicNum * trialSEM(:,cellIndex),'LineWidth',2,'color',[0.0000 0.4470 0.7410]); hold on;
-            errorbar(freqAxis, trialMean(:,cellIndex),trialSEM(:,cellIndex),'LineWidth',2,'color',[0.8500 0.3250 0.0980]);
+            errorbar(freqAxis, trialMedian(peakFrames(cellIndex),:,cellIndex),magicNum * trialSEM(peakFrames(cellIndex),:,cellIndex),'LineWidth',2,'color',[0.0000 0.4470 0.7410]); hold on;
+            errorbar(freqAxis, trialMean(peakFrames(cellIndex),:,cellIndex),trialSEM(peakFrames(cellIndex),:,cellIndex),'LineWidth',2,'color',[0.8500 0.3250 0.0980]);
             scatter(log2(signifTonePoint),signifTuningMedian,40,[0.2 0.2 0.2],'*');
             set(gca, 'XTick', log2([4000 8000 16000 32000 64000]));
             set(gca, 'XTickLabel', [4 8 16 32 64]);
@@ -598,8 +598,8 @@ if true
             xlim([log2(4000) log2(64000)]);
             ylabel('F/F0');
 
-            yaxis right
-            plot(freqAxis,rocAuc)
+            yyaxis right
+            plot(freqAxis,rocAuc(:,cellIndex))
             ylabel('AUC')
             
             legend('Median','Mean','ROC');
