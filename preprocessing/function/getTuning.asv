@@ -178,7 +178,6 @@ imagesc(toneMean')
 xticks(frameAxis)
 xticklabels(frameLabel)
 xlabel('frames')
-yticklabels([])
 caxis([prctile(trialMean(:),5) prctile(trialMean(:),95)])
 title('all tone')
 %---------PLOT PEAK FRAME-----------
@@ -356,6 +355,17 @@ for i = 1:nTones
     popTuningPeakMedian(i) = sum(tuningPeakIndexMedian==i);
     popTuningPeakMean(i) = sum(tuningPeakIndexMean==i);
 end
+
+%popTuningPeakMean= zeros(nTones,1);
+%[~,peakIndex] = max(squeeze(trialMean(:,responsiveCellFlag)));
+%for i = 1:nTones
+%    popTuningPeakMean(i) = sum(peakIndex==i);
+%end
+
+%popTuningMedian = squeeze(nanmean(trialMedian(:,responsiveCellFlag),3));
+%popTuningMean = squeeze(nanmean(trialMean(:,responsiveCellFlag),3));
+
+%popTuningStd = std(tuningMean');
 
 figure;
 
@@ -539,12 +549,11 @@ if true
             ylabel('true positive')
             xlim([0 1])
             ylim([0 1])
-            title(['ROC ' num2str(round(toneorder(toneindex(rocMaxIdx))),'%d') 'HZ'])
+            title(['ROC ' num2str(round(toneorder(toneindex(i))),'%d') 'HZ'])
             legend(h_auc,['AUC ' num2str(rocMax,'%0.2f')])
 
             signifTonePoint = anovaSignifToneCorr(:,cellIndex);
-            signifTuningMedian = trialMedian(pretoneFrames + ...
-                peakFrames(cellIndex),logical(signifTonePoint),cellIndex);
+            signifTuningMedian = trialMedian(logical(signifTonePoint),cellIndex);
             signifTonePoint = toneorder(toneindex(logical(signifTonePoint)));
             %neuronRespTable(1:end-1,[1 cellIndex+1]);
             %signifTuningMedian = trialMedian(:,cellIndex);
@@ -554,13 +563,8 @@ if true
             freqAxis = log2(sort(toneorder));
             magicNum = sqrt(pi/2);
             h_med = errorbar(freqAxis, trialMedian(pretoneFrames + ...
-                peakFrames(cellIndex),:,cellIndex),magicNum * trialSEM(...
-                pretoneFrames+peakFrames(cellIndex),:,cellIndex),...
-                'LineWidth',2,'color',[0.0000 0.4470 0.7410]); hold on;
-            h_mean = errorbar(freqAxis, trialMean(pretoneFrames + ...
-                peakFrames(cellIndex),:,cellIndex),trialSEM(...
-                pretoneFrames+peakFrames(cellIndex),:,cellIndex),...
-                'LineWidth',2,'color',[0.8500 0.3250 0.0980]);
+                peakFrames(cellIndex),:,cellIndex),magicNum * trialSEM(peakFrames(cellIndex),:,cellIndex),'LineWidth',2,'color',[0.0000 0.4470 0.7410]); hold on;
+            h_mean = errorbar(freqAxis, trialMean(peakFrames(cellIndex),:,cellIndex),trialSEM(peakFrames(cellIndex),:,cellIndex),'LineWidth',2,'color',[0.8500 0.3250 0.0980]);
             scatter(log2(signifTonePoint),signifTuningMedian,40,[0.2 0.2 0.2],'*');
             set(gca, 'XTick', log2([4000 8000 16000 32000 64000]));
             set(gca, 'XTickLabel', [4 8 16 32 64]);
@@ -569,7 +573,7 @@ if true
             ylabel('F/F0');
 
             yyaxis right
-            h_roc = plot(freqAxis,rocAuc(:,cellIndex),'Color',[0.8 0.8 0.8],'LineWidth',2);
+            h_roc = plot(freqAxis,rocAuc(:,cellIndex));
             ylabel('AUC')
             
             legend([h_med, h_mean, h_roc],'Median','Mean','ROC');
