@@ -186,6 +186,8 @@ switch selectedOpt
         filenames = 'SelectFile';
     case 'None'
         filenames = 'SelectFile';
+    case 'Save MeanImg'
+        filenames = configTable.('ImagingFile');
 end
 
 set(handles.listbox1,'String',filenames);
@@ -320,6 +322,40 @@ switch currStr
             end
         end
         paramValue = [paramValue;'nFrames_oneplane';nFrames_oneplane];
+        
+    case 'Save MeanImg'
+        filenames = get(handles.listbox1,'String');
+        if ~iscell(filenames)
+            filenames = {filenames};
+        end
+        sbxpath = configTable.sbxpath(strcmp(configTable.ImagingFile,filenames));
+        h5path = configTable.h5path(strcmp(configTable.ImagingFile,filenames));
+        suite2ppath = configTable.suite2ppath(strcmp(configTable.ImagingFile,filenames));
+        dataPath = configTable.dataPath(strcmp(configTable.ImagingFile,filenames));
+        % check if all files have the same path and roi
+        if ~(isequal(sbxpath{:}) && isequal(h5path{:}) && isequal(suite2ppath{:}) && isequal(dataPath{:}))
+            disp('ERROR: Not all files have same path!')
+        end
+        % add path into parameters
+        param = [param;'sbxpath';'h5path';'suite2ppath';'root';'savepath'];
+        paramValue = [paramValue;'sbxpath';sbxpath{1};'h5path';h5path{1};'suite2ppath';suite2ppath{1};...
+            'root';handles.configRoot; 'savepath'; handles.savePath];
+        paramValueDisplay = [paramValueDisplay;sbxpath{1};h5path{1};suite2ppath{1};handles.configRoot;handles.savePath];
+        % add filename into the parameter
+        paramValue = [paramValue;'filename';strjoin(filenames)];
+        paramValue = [paramValue;'datapath';dataPath{1}];
+        % add nframes oneplane into parameter
+        findIndex = @(x)find(strcmp(configTable.ImagingFile,x));
+        nFrames_oneplaneStr = configTable.nFrames_onePlane(cellfun(findIndex,filenames));
+        if ~iscell(nFrames_oneplaneStr); nFrames_oneplaneStr = {nFrames_oneplaneStr}; end
+        for i = 1:length(nFrames_oneplaneStr)
+            nFrames_oneplaneSplit = strsplit(nFrames_oneplaneStr{i});
+            for j = 1:str2double(imagingConfig.nPlanes)
+                nFrames_oneplane(i,j) = str2double(nFrames_oneplaneSplit{j});
+            end
+        end
+        paramValue = [paramValue;'nFrames_oneplane';nFrames_oneplane];
+        
 end
 % display parameters and save it to the handle
 paramTableDisplay = table(param,paramValueDisplay,'VariableNames',{'name','value'});
@@ -509,6 +545,8 @@ case 'Tuning Curve'
     getTuning(handles.param{:});
 case 'TC extraction'
     extractTC(handles.param{:});
+case 'Save MeanImg'
+    getMeanImg(handles.param{:});
 end
 
 % --- Executes on button press in preprocessParamEditButton.
