@@ -1,0 +1,71 @@
+function func_extractTC(varargin)
+
+
+p = func_createInputParser();
+p.parse(varargin{:});
+sep = '\';
+%---------CHECK NUMBER OF CHANNELS-----------
+data = load([p.Results.sbxpath sep filename '.mat']); 
+infosbx = data.info;
+if isempty(infosbx.otparam)
+    check_nPlanes = 1;
+else
+    check_nPlanes = infosbx.otparam(3);
+end
+if check_nPlanes ~= nPlanes
+    disp('ERROR - nPlanes in the parameter not consistent with sbx file.')
+    pause;
+end
+%---------GET RELEVANT PARAMETERS-----------
+[nFuncChannel, functionalChannel, roiType] = func_getFuncChanRoiType(varargin{:});
+
+%---------EXTRACT BASED ON DATA TYPE-----------
+switch p.Results.dataType
+case 'suite2p'
+    data = load(['Fall.mat']);
+    % check if nb of frames per plane computed is true in suite2p files
+    nFrameThisPlane = size(data.Fneu,2);
+    if nFrameThisPlane==sum(nFrames_oneplane(:,i))
+        disp(['Correct nb of frame for plane ' num2str(i) '. Good to go!']);
+    else
+        error(['Bad nb of frame computed for plane ' num2str(i) ', check it out!']);
+    end
+    ly = data.ops.Ly;
+    lx = data.ops.Lx;
+    fileID = fopen('data.bin','r'); % open binary file   
+
+case 'sbx'
+    disp('Work in progress!')
+end
+
+switch p.Results.roiType
+case 'imageJ'
+    roiName = [mouse '_roi' int2str(i-1) '.zip'];
+    rois = ReadImageJROI(roiName); %read imagej rois
+case 'suite2p'
+    disp('Work in progress!')
+end
+
+%---------EXTRACT BASED ON DATA TYPE-----------
+nFrames = nan(nFiles,1);%nFrames_add = nan(nFiles,1);
+for i=1:nFiles
+    sbxread(names{i},1,1);
+    nFrames(i) = info.max_idx;    
+%     if i>1
+%         nFrames_add(i) = nFrames(i)+nFrames_add(i-1); 
+%     else
+%         nFrames_add(i) = nFrames(i); 
+%     end
+%     
+%     if mod(nFrames(i),2)
+%         if i>1
+%             nFrames_oneplane(i,:) = [round(nFrames(i)/nPlanes)+nFrames_oneplane(i-1,1) round(nFrames(i)/nPlanes)-1+nFrames_oneplane(i-1,2)];
+%         else
+%             nFrames_oneplane(i,:) = [round(nFrames(i)/nPlanes) round(nFrames(i)/nPlanes)-1];
+%         end
+%     else
+%         nFrames_oneplane(i,:) = [nFrames(i)/nPlanes+nFrames_oneplane(i-1,1) nFrames(i)/nPlanes+nFrames_oneplane(i-1,2)];
+%     end        
+end
+
+end

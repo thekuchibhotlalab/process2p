@@ -5,7 +5,7 @@ function weight = getNeuropilWeight(imgSize, rois, varargin)
     p.addParameter('maxRadii', 20);
     p.addParameter('avgMethod', 'mean');
     p.addParameter('avgParams', []);
-    p.addParameter('coefficient', 0.7);
+    %p.addParameter('coefficient', 0.7);
     p.parse(varargin{:});
 
     imgSizeX = imgSize(1);
@@ -14,8 +14,8 @@ function weight = getNeuropilWeight(imgSize, rois, varargin)
     
     neuroPilMask = false(imgSizeX, imgSizeY);
     for i = 1:length(rois)
-        x = rois{1,i}.mnCoordinates(:,1); %freehand rois have the outlines in x-y coordinates
-        y = rois{1,i}.mnCoordinates(:,2);
+        x = rois{1,i}(:,1); %freehand rois have the outlines in x-y coordinates
+        y = rois{1,i}(:,2);
         
 
         bw = roipoly(zeros(imgSizeX, imgSizeY),y,x); % y=col; x=rows
@@ -38,8 +38,8 @@ function weight = getNeuropilWeight(imgSize, rois, varargin)
     weight = [];
     for i = 1:length(rois)
         
-        x = rois{1,i}.mnCoordinates(:,1); %freehand rois have the outlines in x-y coordinates
-        y = rois{1,i}.mnCoordinates(:,2);
+        x = rois{1,i}(:,1); %freehand rois have the outlines in x-y coordinates
+        y = rois{1,i}(:,2);
         roiPolyShape = polyshape(x,y);
         [roiCenterX, roiCenterY] = centroid(roiPolyShape);
         
@@ -60,7 +60,7 @@ function weight = getNeuropilWeight(imgSize, rois, varargin)
                 mask = mask ./ sum(mask(:));
                 weight{i} = mask;
         end
-        weight{i} = weight{i} * p.Results.coefficient;
+        %weight{i} = weight{i} * p.Results.coefficient;
        
     end
     warning on

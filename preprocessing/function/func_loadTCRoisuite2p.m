@@ -1,4 +1,4 @@
-function [TC, neuronEachPlane, roisCoord] = func_loadTCsuite2p(varargin)
+function [TC, neuronEachPlane, roisCoord] = func_loadTCRoisuite2p(varargin)
 
 p = func_createInputParser();
 p.addParameter('file', [])
@@ -20,18 +20,13 @@ nFrames_oneplane = p.Results.nFrames_oneplane;
 
 cd(p.Results.suite2ppath);
 TC = []; neuronEachPlane = nan(nPlanes,1);
-roisCoord = [];
+roisCoord = cell(1,nPlanes);
 
 for i=1:nPlanes
     cd([p.Results.suite2ppath '\plane' num2str(i-1)]);
     data = load('Fall.mat'); 
     tc = data.F;
     
-    % TEMP solution: file input specifies which file in concat TC to load
-    if ~isempty(p.Results.file)
-        tc = tc(:,1:nFrames_oneplane(p.Results.file+1,i));
-    end
-
     switch roiType
     case 'axon'
         iscellFlag = ~data.iscell(:,1);
@@ -39,16 +34,24 @@ for i=1:nPlanes
         iscellFlag = data.iscell(:,1);
     end
     
-    %if strcmp(celltype,'axon')
-    %    iscell = ~iscell;
-    %end
-    
-    % TEMP solution: 2nd plane generally have 1 less frame. 
-    if size(TC,1)>0
-        TC = [TC [tc(logical(iscellFlag),:)';nan(1,sum(iscellFlag))]];
-    else
-        TC = [TC tc(logical(iscellFlag),:)']; % time by neuron
+    % if the target file is part of the TC, only extract that part
+    if ~all(p.Results.filenameTCFlag)
+        frameIndex_thisPlane = [];
+        fileIndex = find(p.Results.filenameTCFlag==1);
+        for k = fileIndex
+            frameIndex_thisPlane = [frameIndex_thisPlane ...
+                (nFrames_oneplane(k,j)+1):nFrames_oneplane(k+1,j)]; 
+        end
+        tempTC = tempTC(logical(iscellFlag),frameIndex_thisPlane);
+        
+        % TEMP solution: 2nd plane generally have 1 less frame. 
+        if size(TC,1)>0
+            TC = [TC [tc(logical(iscellFlag),:)';nan(1,sum(iscellFlag))]];
+        else
+            TC = [TC tc(logical(iscellFlag),:)']; % time by neuron
+        end     
     end
+    
     neuronEachPlane(i) = sum(iscellFlag);
-    roisCoord = [roisCoord;data.stat(logical(iscellFlag))'];
+    roisCoord{i} = data.stat(logical(iscellFlag))';
 end

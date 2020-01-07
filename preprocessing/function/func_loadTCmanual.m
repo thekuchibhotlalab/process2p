@@ -6,7 +6,6 @@ function [TC,neuronEachPlane] = func_loadTCmanual(varargin)
 % Long description
     
 p = func_createInputParser();
-p.addParameter('file', [])
 p.parse(varargin{:});
 sep = '\';
 %---------GET NUMBER OF CHANNELS-----------
@@ -19,29 +18,42 @@ else
     functionalChannel = {p.Results.functionalChannel};
 end
 nFrames_oneplane = p.Results.nFrames_oneplane;
+nFrames_oneplane_select = nFrames_oneplane(logical(p.Results.filenameTCFlag),:);
+nFrames_oneplane_all = nFrames_oneplane;
 
-
+nFrames_oneplane_all = cumsum(nFrames_oneplane_all);
+nFrames_oneplane_all = [zeros(1,nPlanes);nFrames_oneplane_all];
 
 tcFileSplit = strsplit(p.Results.tcFile);
 tcFile = reshape(tcFileSplit,nFuncChannel,nPlanes);
-TC = cell(1,nFuncChannel);
+TC = cell(nFuncChannel,nPlanes);
 for i = 1:nFuncChannel
+    TC_thisPlane = cell(1,nPlanes);
     for j = 1:nPlanes
         tcName = [p.Results.datapath sep tcFile{i,j}];
         tempTC = load(tcName);
-        tempTC = tempTC.tempTC;
-        % TEMP solution: file input specifies which file in concat TC to load
-        if ~isempty(p.Results.file)
-            tempTC = tempTC(:,1:nFrames_oneplane(p.Results.file+1,j));
+        try 
+            tempTC = tempTC.TC;
+        catch
+            tempTC = tempTC.tempTC;
+            disp('TC naming follows old convention')
         end
         
-        if size(TC{i},1)>0
-            TC{i} = [TC{i} [tempTC';nan(1,size(tempTC,1))]];
-        else
-            TC{i} = [TC{i} tempTC']; %TC: time by neuron
+        % if the target file is part of the TC, only extract that part
+        if ~all(p.Results.filenameTCFlag)
+            frameIndex_thisPlane = [];
+            fileIndex = find(p.Results.filenameTCFlag==1);
+            for k = fileIndex
+                frameIndex_thisPlane = [frameIndex_thisPlane ...
+                    (nFrames_oneplane_all(k,j)+1):nFrames_oneplane_all(k+1,j)]; 
+            end
+            tempTC = tempTC(:,frameIndex_thisPlane); 
         end
+        TC_thisPlane{j} = tempTC;
         neuronEachPlane{i}(j) = size(tempTC,1);
     end
+    TC_thisPlane = func_attachNanFrames(TC_thisPlane, nFrames_oneplane_select,varargin{:});
+    TC(i,:) = TC_thisPlane;
 end
 
 end

@@ -19,10 +19,13 @@ p.addParameter('filename', [])
 p.addParameter('nPlanes', 2)
 p.addParameter('functionalChannel', 'green')
 p.addParameter('nFrames_oneplane', [])
+p.addParameter('dataType', 'suite2p')
 p.addParameter('roiType', 'cell')
 p.addParameter('roiMethod', 'suite2p')
 p.addParameter('tcMethod', 'suite2p')
 p.addParameter('roiFile', [])
 p.addParameter('tcFile', [])
+p.addParameter('filenameTCFlag', [])
+p.addParameter('filenameTC', [])
 
 end

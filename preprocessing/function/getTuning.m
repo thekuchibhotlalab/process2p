@@ -18,7 +18,7 @@ if iscell(filename) && length(filename) >1
     disp('ERROR - More than one session selected!')
 end
 
-%cd(p.Results.sbxpath);
+%---------CHECK NUMBER OF CHANNELS-----------
 data = load([p.Results.sbxpath sep filename '.mat']); 
 infosbx = data.info;
 if isempty(infosbx.otparam)
@@ -31,47 +31,18 @@ if check_nPlanes ~= nPlanes
     pause;
 end
 
-%---------CHECK NUMBER OF CHANNELS-----------
-if iscell(p.Results.functionalChannel)
-    nFuncChannel = length(p.Results.functionalChannel);
-    functionalChannel = p.Results.functionalChannel;
-    roiType = p.Results.roiType{1};
-else
-    nFuncChannel = 1;
-    functionalChannel = {p.Results.functionalChannel};
-    roiType = p.Results.roiType;
-end
+%---------GET RELEVANT PARAMETERS-----------
+[nFuncChannel, functionalChannel, roiType] = func_getFuncChanRoiType(varargin{:});
 
 %---------GET CALCIUM TRACES-----------
-switch p.Results.roiMethod
-    case 'suite2p'
-        [suite2pTC, neuronEachPlane, roisCoord] = func_loadTCsuite2p(varargin{:},'file',1);
-        roisCoord = {roisCoord};
-    case 'manual'
-        roiFileSplit = strsplit(p.Results.roiFile);
-        roiFile = reshape(roiFileSplit,nFuncChannel,nPlanes);
-        roisCoord = cell(1,nFuncChannel);
-        for i = 1:nFuncChannel
-            for j = 1:nPlanes
-                roiName = [p.Results.datapath sep roiFile{i,j}];
-                roisCoord{i} = [roisCoord{i} ReadImageJROI(roiName)];
-            end
-        end
-end
-switch p.Results.tcMethod
-    case 'suite2p'
-        TC = {suite2pTC};
-        neuronEachPlane = {neuronEachPlane};
-    case 'manual'
-        [TC, neuronEachPlane] = func_loadTCmanual(varargin{:},'file',1);
-        
-end
-%---------CHECK IF NUMBER OF CHANNELs IS CORRECT-----------
+[TC, neuronEachPlane, roisCoord] = func_loadTCRoi(varargin{:});
+
+%---------CHECK IF NUMBER OF CHANNELS IS CORRECT-----------
 if length(TC) ~= nFuncChannel
     disp('ERROR - Number of functional channels not correct')
 end
 %---------GET TUNING DATA FOR EACH CHANNEL-----------
-if length(TC) == 1
+if nFuncChannel == 1
     %CREATE SAVE FOLDER
     savePath = [p.Results.savepath sep p.Results.filename '_Tuning'];
     if exist(savePath,'dir') ~= 7
@@ -80,9 +51,9 @@ if length(TC) == 1
         mkdir([savePath '/population']);
     end
     %PROCESS TUNING DATA
-    getTuning_oneChannel(TC{1},neuronEachPlane{1},roisCoord{1},savePath,p.Results.suite2ppath);
+    getTuning_oneChannel(TC{1},neuronEachPlane{1},roisCoord(1,:),savePath,p.Results.suite2ppath);
 
-elseif length(TC) == 2
+elseif nFuncChannel == 2
     for i = 1:nFuncChannel        
         %CREATE SAVE FOLDER
         savePath = [p.Results.savepath sep p.Results.filename '_Tuning' sep 'chan' int2str(i)];
@@ -92,14 +63,16 @@ elseif length(TC) == 2
             mkdir([savePath '/population']);
         end
         %PROCESS TUNING DATA
-        getTuning_oneChannel(TC{i},neuronEachPlane{i},roisCoord{i},savePath,p.Results.suite2ppath);
+
+        TC_channel = cat(1,TC{i,:})';
+        getTuning_oneChannel(TC_channel,neuronEachPlane{i},roisCoord(i,:),savePath,p.Results.suite2ppath);
     end
 end
 %---------END OF GET TUNING FUNCTION-----------
 end
 
 %---------FUNCTION TO PROCESS CALCIUM TRACES-----------
-function getTuning_oneChannel(TC,neuronEachPlane,roisCoord,savePath,suite2ppath)
+function getTuning_oneChannel(TC,neuronEachPlane,roisBound,savePath,suite2ppath)
 
 %---------DECLARE SOME PARAMETERS-----------
 global nPlanes
@@ -115,6 +88,7 @@ baselineFrames = 5;
 nNeuron = size(TC,2);
 smoothWindow = 3;
 sep = '\';
+saveSingleNeuronFlag = true;
 
 %---------SHIFT THE TC FOR PRETONE PERIOD-----------
 TC_original = TC; % keep a copy of original TC
@@ -168,7 +142,7 @@ for i = 1:nTones
         xticklabels([])
     end
     if mod(i,6) == 1
-       ylabel('neurons') 
+        ylabel('neurons') 
     else
         yticklabels([])
     end
@@ -211,7 +185,7 @@ xticklabels(frameLabel)
 ylabel('dff')
 title('population average dff')
 xlim([0 nFramesPerTone])
-%
+% 
 individualPeakFrameFlag = true;
 if individualPeakFrameFlag
     peakFrames = peakIndex;
@@ -358,7 +332,6 @@ for i = 1:nTones
 end
 
 figure;
-
 subplot(2,2,2)
 toneRespCount = sum(anovaSignifToneCorr,2);
 freqAxis = log2(sort(toneorder));
@@ -434,13 +407,16 @@ for i = 1:nPlanes
     imagesc(refImg);colormap gray;hold on;
     ylim([0 size(refImg,1)]);xlim([0 size(refImg,2)]);
 
-    for j=(neuronPlane(i)+1):neuronPlane(i+1)
-        x = roisCoord{1,j}.mnCoordinates(:,1); %freehand rois have the outlines in x-y coordinates
-        y = roisCoord{1,j}.mnCoordinates(:,2); %matlab matrices are inverted so x values are the 2nd column of mn coordinates, and y is the 1st columna
-        if responsiveCellFlag(j)
-             plot(x,y,'.','color',C(colormapIndex(peakIndex(j-neuronPlane(i))),:),'MarkerSize',1);
-        else 
-            plot(x,y,'.','color',[0.8 0.8 0.8],'MarkerSize',1);
+    for j = 1:neuronEachPlane(i)
+        cellIndex = neuronPlane(i) + j;
+        x = roisBound{i}{j}(:,1); %freehand rois have the outlines in x-y coordinates
+        y = roisBound{i}{j}(:,2); %matlab matrices are inverted so x values are the 2nd column of mn coordinates, and y is the 1st columna
+        if responsiveCellFlag(cellIndex)
+            %plot(x,y,'.','color',C(colormapIndex(peakIndex(cellIndex)),:),'MarkerSize',1);
+            patch(x,y,C(colormapIndex(peakIndex(cellIndex)),:),'EdgeColor','none');
+        else
+            patch(x,y,[0.8 0.8 0.8],'EdgeColor','none');
+            %plot(x,y,'.','color',[0.8 0.8 0.8],'MarkerSize',1);
         end
     end
     title(['Plane' int2str(i)])
@@ -463,8 +439,7 @@ saveas(gcf,[savePath...
 %% single neuron analysis 
 %plotNeuron = nNeuron;
 %cellPerPlane = zeros(1,nPlanes);
-if true
-    currentNeuron = [0 neuronEachPlane(1)];
+if saveSingleNeuronFlag
     for j = 1:nPlanes
     %     roiName = [ filePath '/' roiFolderName '/' fileName '_roi' int2str(j),suffix,'.zip'];
         %roiName = [ filePath '/' roiFolderName '/' fileName '_roi' int2str(j) '.zip'];
@@ -477,7 +452,7 @@ if true
             tic;
 
             tuningFig = figure('visible','off');
-            cellIndex = currentNeuron(j) + i;
+            cellIndex = neuronPlane(j) + i;
             % REMEMBER TO CHANGE THIS LINE
             %cd([suite2ppath '\plane' num2str(j-1)]);
             data = load([suite2ppath sep 'plane' num2str(j-1) sep 'Fall.mat']); 
@@ -489,8 +464,8 @@ if true
             %y=roisCoord{i+currentNeuron(j)}.ypix; %matlab matrices are inverted so x values are the 2nd column of mn coordinates, and y is the 1st columna
             %plot(x,y,'.','color',[0.8 0.8 0.8],'MarkerSize',3);
 
-            x=roisCoord{1,cellIndex}.mnCoordinates(:,1); %freehand rois have the outlines in x-y coordinates
-            y=roisCoord{1,cellIndex}.mnCoordinates(:,2); %matlab matrices are inverted so x values are the 2nd column of mn coordinates, and y is the 1st columna
+            x=roisBound{j}{i}(:,1); %freehand rois have the outlines in x-y coordinates
+            y=roisBound{j}{i}(:,2); %matlab matrices are inverted so x values are the 2nd column of mn coordinates, and y is the 1st columna
             patch(x,y,'g','EdgeColor','none');
             title(['Cell #' int2str(cellIndex) ' Plane #' int2str(j) ' FoV'])
 
