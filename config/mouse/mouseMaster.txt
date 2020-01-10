@@ -1,0 +1,42 @@
+mouse cd017
+suite2ppath I:\celine\cd017\suite2p
+h5path V:\LabData4\celine\cd017\h5
+sbxpath V:\LabData4\celine\cd017
+behavpath V:\LabData4\celine\cd017\behavior
+imagingConfig excitatory.txt
+behaviorConfig GNG.txt
+allSession cd017_config.csv
+
+mouse cd036_1
+suite2ppath 'H:\celine\cd036\suite2p\
+h5path H:\celine\cd036\
+sbxpath T:\LabData5\cd036\
+imagingConfig excitatory.txt
+behaviorConfig GNG.txt
+
+mouse cd036_2
+suite2ppath 'H:\celine\cd036\suite2p\
+h5path H:\celine\cd036\
+sbxpath T:\LabData5\cd036\
+imagingConfig excitatory.txt
+behaviorConfig GNG.txt
+
+mouse cd040
+suite2ppath V:\LabData5\cd040\suite2p\
+h5path V:\LabData5\cd040
+sbxpath V:\LabData5\cd040\
+behavpath V:\LabData5\cd040\behavior
+imagingConfig excitatory.txt
+behaviorConfig GNG.txt
+
+mouse cd037
+imagingConfig excitatory.txt
+behaviorConfig GNG.txt
+sessionConfig cd037_config.csv
+
+mouse zz008
+suite2ppath H:\celine\cd040\suite2p\
+h5path H:\celine\cd040\
+sbxpath T:\LabData5\cd040\
+imagingConfig excitatory.txt
+behaviorConfig GNG_ctrl1.txt

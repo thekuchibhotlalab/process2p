@@ -33,37 +33,41 @@ end
 [nFuncChannel, functionalChannel, roiType] = func_getFuncChanRoiType(varargin{:});
 
 %---------SAVE MEAN IMAGE OF ALL SESSIONS-----------
-imgPath = [savepath sep 'meanImg' sep]; % 2 channel does not work, suite2p only saves meanImg for 2nd channel
+imgPath = [datapath sep 'meanImg' sep]; % 2 channel does not work, suite2p only saves meanImg for 2nd channel
+mkdir(imgPath)
 for i = 1:nPlanes
-    for j = 1:nFuncChannel
-        load([suite2ppath sep 'plane' int2str(j-1) sep 'Fall.mat'],'ops');
-        mkdir(imgPath)
+    for chan = 1:nFuncChannel
+        load([suite2ppath sep 'plane' int2str(i-1) sep 'Fall.mat'],'ops');
+        
         maxProj = zeros(size(ops.meanImgE));
         yStart = ops.xrange(1);
         xStart = ops.yrange(1);
         maxProj(xStart+1:xStart+size(ops.max_proj,1), yStart+1:yStart+size(ops.max_proj,2)) = double(ops.max_proj);
         
         if nFuncChannel>1
-            imwrite(double(ops.meanImgE),[savepath sep 'meanImgE_plane' int2str(i-1) '_' functionalChannel{chan} '.tiff'])
-            imwrite(uint16(maxProj),[savepath sep 'maxProj_plane' int2str(i-1) '_' functionalChannel{chan} '.tiff'])
+            imwrite(double(ops.meanImgE),[imgPath sep 'meanImgE_plane' int2str(i-1) '_' functionalChannel{chan} '.tiff'])
+            imwrite(uint16(maxProj),[imgPath sep 'maxProj_plane' int2str(i-1) '_' functionalChannel{chan} '.tiff'])
         else
-            imwrite(double(ops.meanImgE),[savepath sep 'meanImgE_plane' int2str(i-1) '.tiff'])
-            imwrite(uint16(maxProj),[savepath sep 'maxProj_plane' int2str(i-1) '.tiff'])
+            imwrite(double(ops.meanImgE),[imgPath sep 'meanImgE_plane' int2str(i-1) '.tiff'])
+            imwrite(uint16(maxProj),[imgPath sep 'maxProj_plane' int2str(i-1) '.tiff'])
         end
     end
 end
 
-imshowFlag = true;
-avg_sessions = cell(nFiles,2);
+avg_sessions = cell(nFiles,nFuncChannel,nPlanes);
 for i=1:nPlanes
-    for j = 1:nFuncChannel
+    for chan = 1:nFuncChannel
         data = load([suite2ppath sep 'plane' num2str(i-1) sep 'Fall.mat']);
         ly = data.ops.Ly;
         lx = data.ops.Lx;
-        fileID = fopen([suite2ppath sep 'plane' num2str(i-1) sep 'data.bin'],'r'); % open binary file
+        if chan == 1
+            fileID = fopen([suite2ppath sep 'plane' num2str(i-1) sep 'data.bin'],'r'); % open binary file
+        else
+            fileID = fopen([suite2ppath sep 'plane' num2str(i-1) sep 'data_chan' int2str(chan) '.bin'],'r'); % open binary file
+        end
         for j=1:nFiles
             k=0; a=1;
-            nimg = nFrames_oneplane(j+1,i);
+            nimg = nFrames_oneplane(j,i);
             blksize = 7000;%2000; % nb of frames loaded at a time (depend on RAM)
             to_read = min(blksize,nimg-k);  
             avgA = []; avgA = nan(lx,ly);
@@ -75,15 +79,15 @@ for i=1:nPlanes
                 k = k+to_read;
                 to_read = min(blksize,nimg-k);
             end
-            % to check the bloc averages:   figure;for l=1:9,subplot(3,3,l);hold on;imagesc(avgA(:,:,l));colormap gray;title(num2str(l));end
-            avg_sessions{j,i} = mean(avgA,3)';
+            % to check the bloc averages: 
+            avg_sessions{j,i,chan} = mean(avgA,3)';
         end   
         % Save the mean img of this plane   
         sessionMeanImg = avg_sessions(:,i);
         if nFuncChannel>1
-            save([savepath sep mouse '_MeanImgPerSessions_Plane' num2str(i) '_' functionalChannel{chan} '.mat'],'sessionMeanImg');
+            save([imgPath sep mouse '_MeanImgPerSessions_Plane' num2str(i-1) '_' functionalChannel{chan} '.mat'],'sessionMeanImg');
         else
-            save([savepath sep mouse '_MeanImgPerSessions_Plane' num2str(i) '.mat'],'sessionMeanImg');
+            save([imgPath sep mouse '_MeanImgPerSessions_Plane' num2str(i-1) '.mat'],'sessionMeanImg');
         end
         fclose all;  
     end  
