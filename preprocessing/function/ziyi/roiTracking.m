@@ -186,7 +186,7 @@ for i=1:nPlanes
 end
 
 %---------ROI TRACKING CODE-----------
-ishere = cell(nPlanes,1);
+ishere = [];
 warning('off')
 margins = [0.02 0.002];
 %for i=1:nPlanes
@@ -205,13 +205,13 @@ zfluo = squeeze(mat(:,:,2));
 nCells = size(zfluo,1);
 %if ~exist([suite2ppath sep 'plane' num2str(i-1) '\ishere_test_plane' num2str(i-1) '.mat'],'file')
 if ~exist([roipath sep 'ishere_plane' num2str(i-1) '.mat'],'file')
-    ishere{i} = nan(nCells,nDays);
+    ishere = nan(nCells,nDays);
     c = 1;
 else
     %ishere = load([suite2ppath sep 'plane' num2str(i-1) '\ishere_test_plane' num2str(i-1) '.mat']);
     ishere = load([roipath sep  'ishere_plane' num2str(i-1) '.mat']);
     ishere = ishere.ishere;       
-    c = size(ishere{i}(~any(isnan(ishere{i}),2),:),1)+1;
+    c = size(ishere(~any(isnan(ishere),2),:),1)+1;
     if c==0
         c = 1;
     end
@@ -469,8 +469,8 @@ for j=c:nCells
         pat.FaceAlpha = 0.3;
     end
     pause(2);
-    %ishere{i}(j,:) = answr;
-    ishere{i}(j,:) = tempIsCell;
+    %ishere(j,:) = answr;
+    ishere(j,:) = tempIsCell;
     %disp(['should be saved: ' num2str(tempIsCell)]);
     close(figdays);
 
@@ -546,7 +546,7 @@ for j=c:nCells
 
     % Save indiv plane
     try
-        save([roipath sep 'ishere_test_plane' num2str(i-1) '.mat'],'ishere');
+        save([roipath sep 'ishere_plane' num2str(i-1) '.mat'],'ishere');
     catch
         keyboard
         disp('check this!')
