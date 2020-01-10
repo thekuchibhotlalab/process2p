@@ -16,11 +16,10 @@ else
     filename = p.Results.filename;
     if ~iscell(filename)
         filename = {filename};
-
     end
 end
-%sbxpath = p.Results.sbxpath;
-sbxpath = func_loadMasterConfig('mouse',p.Results.mouse, 'ReturnData', 'sbxpath','root',p.Results.root);
+sbxpath = p.Results.sbxpath;
+%sbxpath = func_loadMasterConfig('mouse',p.Results.mouse, 'ReturnData', 'sbxpath','root',p.Results.root);
 cd(sbxpath);
 nFiles = length(filename);
 nFrames = nan(nFiles,1);nFrames_add = nan(nFiles,1);

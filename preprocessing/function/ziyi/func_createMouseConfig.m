@@ -37,38 +37,38 @@ function T = func_createMouseConfig(mouse, h5path)
             count = count + 1;
             daySessCount = daySessCount +1;
             tempSplit = strsplit(names{count},'_');
-            if uniqueDays(i) == 0
+            if uniqueDays(i) == 0 % for day 0, tuning
                 if sessions{i}(j) == 1
-                    T(count,1:11) = {tempSplit{2}, num2str(sessions{i}(j),'%03d'),  'Tuning PuretoneBef',names{count}, '', 0, 0, 0, 0, 0, 0};
-                    %tempLine = ['Day ' tempSplit{2} ' Session ' num2str(sessions{i}(j),'%03d') ' Imaging ' names{count} ' Tuning PuretoneBef'];
-                elseif sessions{i}(j) == 2
-                    T(count,1:11) = {tempSplit{2}, num2str(sessions{i}(j),'%03d'),  'Tuning WhiteNoiseBef',names{count}, '', 0, 0, 0, 0, 0, 0};
-                    %tempLine = ['Day ' tempSplit{2} ' Session ' num2str(sessions{i}(j),'%03d') ' Imaging ' names{count} ' Tuning WhiteNoiseBef'];
+                    T(count,1:11) = {str2double(tempSplit{2}), sessions{i}(j),  'Tuning PuretoneBef',names{count}, '', 0, 0, 0, 0, 0, 0};
+                    %tempLine = ['Day ' str2double(str2double(tempSplit{2})) ' Session ' sessions{i}(j) ' Imaging ' names{count} ' Tuning PuretoneBef'];
+                elseif sessions{i}(j) >= 2
+                    T(count,1:11) = {str2double(tempSplit{2}), sessions{i}(j),  'Tuning WhiteNoiseBef',names{count}, '', 0, 0, 0, 0, 0, 0};
+                    %tempLine = ['Day ' str2double(str2double(tempSplit{2})) ' Session ' sessions{i}(j) ' Imaging ' names{count} ' Tuning WhiteNoiseBef'];
                 end
             elseif i == length(uniqueDays)-1 % post-learning D1 tuning curve sessions
                 if sessions{i}(j) == 1
-                    T(count,1:11) = {tempSplit{2}, num2str(sessions{i}(j),'%03d'),  'Tuning PuretoneAftD1',names{count}, '', 0, 0, 0, 0, 0, 0};
-                    %tempLine = ['Day ' tempSplit{2} ' Session ' num2str(sessions{i}(j),'%03d') ' Imaging ' names{count} ' Tuning PuretoneAftD1'];
-                elseif sessions{i}(j) == 2
-                    T(count,1:11) = {tempSplit{2}, num2str(sessions{i}(j),'%03d'),  'Tuning WhiteNoiseAftD1',names{count}, '', 0, 0, 0, 0, 0, 0};
-                    %tempLine = ['Day ' tempSplit{2} ' Session ' num2str(sessions{i}(j),'%03d') ' Imaging ' names{count} ' Tuning WhiteNoiseAftD1'];
+                    T(count,1:11) = {str2double(tempSplit{2}), sessions{i}(j),  'Tuning PuretoneAftD1',names{count}, '', 0, 0, 0, 0, 0, 0};
+                    %tempLine = ['Day ' str2double(str2double(tempSplit{2})) ' Session ' sessions{i}(j) ' Imaging ' names{count} ' Tuning PuretoneAftD1'];
+                elseif sessions{i}(j) >= 2
+                    T(count,1:11) = {str2double(tempSplit{2}), sessions{i}(j),  'Tuning WhiteNoiseAftD1',names{count}, '', 0, 0, 0, 0, 0, 0};
+                    %tempLine = ['Day ' str2double(str2double(tempSplit{2})) ' Session ' sessions{i}(j) ' Imaging ' names{count} ' Tuning WhiteNoiseAftD1'];
                 end
             elseif i == length(uniqueDays) % post-learning D7 tuning curve sessions
                 if sessions{i}(j) == 1
-                    T(count,1:11) = {tempSplit{2}, num2str(sessions{i}(j),'%03d'),  'Tuning PuretoneAftD7',names{count}, '', 0, 0, 0, 0, 0, 0};
-                    %tempLine = ['Day ' tempSplit{2} ' Session ' num2str(sessions{i}(j),'%03d') ' Imaging ' names{count} ' Tuning PuretoneAftD7'];
-                elseif sessions{i}(j) == 2
-                    T(count,1:11) = {tempSplit{2}, num2str(sessions{i}(j),'%03d'),  'Tuning WhiteNoiseAftD7',names{count}, '', 0, 0, 0, 0, 0, 0};
-                    %tempLine = ['Day ' tempSplit{2} ' Session ' num2str(sessions{i}(j),'%03d') ' Imaging ' names{count} ' Tuning WhiteNoiseAftD7'];
+                    T(count,1:11) = {str2double(tempSplit{2}), sessions{i}(j),  'Tuning PuretoneAftD7',names{count}, '', 0, 0, 0, 0, 0, 0};
+                    %tempLine = ['Day ' str2double(str2double(tempSplit{2})) ' Session ' sessions{i}(j) ' Imaging ' names{count} ' Tuning PuretoneAftD7'];
+                elseif sessions{i}(j) >= 2
+                    T(count,1:11) = {str2double(tempSplit{2}), sessions{i}(j),  'Tuning WhiteNoiseAftD7',names{count}, '', 0, 0, 0, 0, 0, 0};
+                    %tempLine = ['Day ' str2double(str2double(tempSplit{2})) ' Session ' sessions{i}(j) ' Imaging ' names{count} ' Tuning WhiteNoiseAftD7'];
                 end
             else % all behavioral days
                 if j == length(sessions{i}) % baseline sessions
-                    T(count,1:11) = {tempSplit{2}, num2str(sessions{i}(j),'%03d'),  'Baseline',names{count}, '', 0, 0, 0, 0, 0, 0};
-                    %tempLine = ['Day ' tempSplit{2} ' Session ' num2str(sessions{i}(j),'%03d') ' Imaging ' names{count} ' Baseline ' temBehFileName];
+                    T(count,1:11) = {str2double(tempSplit{2}), sessions{i}(j),  'Baseline',names{count}, '', 0, 0, 0, 0, 0, 0};
+                    %tempLine = ['Day ' str2double(str2double(tempSplit{2})) ' Session ' sessions{i}(j) ' Imaging ' names{count} ' Baseline ' temBehFileName];
                 else % behavioral sessions    
-                    tempBehFileName = [tempSplit{1} '_' int2str(str2num(tempSplit{2})) 'v' int2str(daySessCount) '.txt']; % infer behavioral file name         
-                    T(count,1:11) = {tempSplit{2}, num2str(sessions{i}(j),'%03d'),  'Behavior',names{count}, tempBehFileName, 0, 0, 0, 0, 0, 0};
-                    %tempLine = ['Day ' tempSplit{2} ' Session ' num2str(sessions{i}(j),'%03d') ' Imaging ' names{count} ' Behavior ' temBehFileName];
+                    tempBehFileName = [tempSplit{1} '_' int2str(str2double(tempSplit{2})) 'v' int2str(daySessCount) '.txt']; % infer behavioral file name         
+                    T(count,1:11) = {str2double(tempSplit{2}), sessions{i}(j),  'Behavior',names{count}, tempBehFileName, 0, 0, 0, 0, 0, 0};
+                    %tempLine = ['Day ' str2double(tempSplit{2}) ' Session ' sessions{i}(j) ' Imaging ' names{count} ' Behavior ' temBehFileName];
                 end
             end
 
