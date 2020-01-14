@@ -47,7 +47,6 @@ TONEF = 12;
 CONTEXT=13;
 sep = '\';
 warning('off');
-%load(['E:\KishoreLab\Shared\Matlab\preprocessing-newpipeline-draft\preprocessing\config\mouse\' mouse '_ImagingMetaData.mat']);
 if nFuncChannel == 1
     prompt = {'Enter Plane:'};
     dlgtitle = 'Input';
