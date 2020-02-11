@@ -92,7 +92,7 @@ for i = 1:length(uniqueDays)
                 %tempLine = ['Day ' str2double(tempSplit{2}) ' Session ' sessions{i}(j) ' Imaging ' names{count} ' Behavior ' temBehFileName];
             end
         end
-        T(count,12) = {strjoin(strsplit(int2str(nFrames_oneplane(count,:))))};
+        T(count,12) = {strjoin(strsplit(int2str(nFrames_oneplane(i,:))))};
         %tempLine = [tempLine ' Alignment Nan ROI Nan TC Nan Neuropil Nan Deconvolution Nan'];
 
         %fprintf(fileID,[tempLine '\n']);
@@ -103,7 +103,7 @@ end
 T = cell2table(T);
 T.Properties.VariableNames = {'Day','Session','BehavType','ImagingFile',...
     'BehavFile','Alignment', 'ROI', 'TC', 'Neuropil', 'dff', 'Deconvolution',...
-    'nFrames_oneplane'};
+    'nFra'};
 %fclose(fileID);
 writetable(T,[mouse '_config.csv']);
 

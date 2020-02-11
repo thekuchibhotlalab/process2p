@@ -16,7 +16,7 @@ switch p.Results.roiMethod
             roisCoord{1,j} = cell(1,length(tempRoi{j}));
             for k = 1:length(tempRoi{j}) % neuron in each plane 
                 bound = boundary(double(tempRoi{j}{k}.xpix)', double(tempRoi{j}{k}.ypix)',1); % restricted bound
-                tempCoord = [tempRoi{j}{k}.xpix(bound) tempRoi{j}{k}.ypix(bound)];
+                tempCoord = [tempRoi{j}{k}.xpix(bound)' tempRoi{j}{k}.ypix(bound)'];
                 roisCoord{1,j}{k} = tempCoord;
             end
         end
@@ -43,7 +43,7 @@ switch p.Results.roiMethod
 end
 switch p.Results.tcMethod
     case 'suite2p'
-        TC = {suite2pTC};
+        TC = suite2pTC;
         neuronEachPlane = {neuronEachPlane};
     case 'manual'
         [TC, neuronEachPlane] = func_loadTCmanual(varargin{:});      

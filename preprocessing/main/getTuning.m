@@ -38,7 +38,7 @@ end
 [TC, neuronEachPlane, roisCoord] = func_loadTCRoi(varargin{:});
 
 %---------CHECK IF NUMBER OF CHANNELS IS CORRECT-----------
-if length(TC) ~= nFuncChannel
+if size(TC,1) ~= nFuncChannel
     disp('ERROR - Number of functional channels not correct')
 end
 %---------GET TUNING DATA FOR EACH CHANNEL-----------
@@ -51,7 +51,8 @@ if nFuncChannel == 1
         mkdir([savePath '/population']);
     end
     %PROCESS TUNING DATA
-    getTuning_oneChannel(TC{1},neuronEachPlane{1},roisCoord(1,:),savePath,p.Results.suite2ppath);
+    TC_allPlane = cat(1,TC{:})';
+    getTuning_oneChannel(TC_allPlane,neuronEachPlane{1},roisCoord(1,:),savePath,p.Results.suite2ppath);
 
 elseif nFuncChannel == 2
     for i = 1:nFuncChannel        
@@ -86,7 +87,7 @@ frameRate = 30.98/nPlanes; % in the future, do not hard code this.
 pretoneFrames = 10;
 baselineFrames = 5;
 nNeuron = size(TC,2);
-smoothWindow = 3;
+smoothWindow = 5;
 sep = '\';
 saveSingleNeuronFlag = true;
 
@@ -127,6 +128,7 @@ toneMean = squeeze(nanmean(nanmean(TCpretone_reorder,2),3));
 frameAxis = pretoneFrames:20:nFramesPerTone;
 frameLabel = cellfun(@num2str,num2cell(frameAxis-pretoneFrames),'UniformOutput',false);
 psthFig = figure;
+set(gcf, 'Units', 'Normalized', 'OuterPosition', [0.15, 0.04, 0.85, 0.96]);% Enlarge figure to full screen.
 for i = 1:nTones
     subplot(3,6,i)
     imagesc(squeeze(trialMean(:,i,:))');
@@ -155,9 +157,14 @@ xlabel('frames')
 yticklabels([])
 caxis([prctile(trialMean(:),5) prctile(trialMean(:),95)])
 title('all tone')
+saveas(gcf,[ savePath ...
+        '/population/populationTonePSTH.png']);
+
 %---------PLOT PEAK FRAME-----------
-[maxValue,peakIndex] = max(toneMean(pretoneFrames+1:pretoneFrames+1+frameRate,:),[],1);
+[maxValue,peakIndex] = max(toneMean(pretoneFrames+3:pretoneFrames+1+ceil(frameRate*0.66),:),[],1);
+%[maxValue,peakIndex] = max(toneMean(pretoneFrames+1:pretoneFrames+1+frameRate,:),[],1);
 latFig = figure;
+set(gcf, 'Units', 'Normalized', 'OuterPosition', [0.15, 0.04, 0.45, 0.56]);% Enlarge figure to full screen.
 subplot(2,2,1)
 histogram(peakIndex)
 xlabel('peak frame')
@@ -185,7 +192,9 @@ xticklabels(frameLabel)
 ylabel('dff')
 title('population average dff')
 xlim([0 nFramesPerTone])
-% 
+saveas(gcf,[ savePath ...
+        '/population/populationTonePeak.png']);
+
 individualPeakFrameFlag = true;
 if individualPeakFrameFlag
     peakFrames = peakIndex;
@@ -384,7 +393,12 @@ saveas(gcf,[ savePath ...
 
 %[~,peakIndex] = max(tuningMedian);
 neuronPlane = cumsum(neuronEachPlane);
-neuronPlane = [0 neuronPlane];
+try
+    neuronPlane = [0;neuronPlane];
+catch
+    neuronPlane = [0 neuronPlane];
+    disp('check this')
+end
 figure;
 for i = 1:nPlanes
     %cd([suite2ppath '\plane' num2str(i-1)]);
@@ -413,7 +427,7 @@ for i = 1:nPlanes
         y = roisBound{i}{j}(:,2); %matlab matrices are inverted so x values are the 2nd column of mn coordinates, and y is the 1st columna
         if responsiveCellFlag(cellIndex)
             %plot(x,y,'.','color',C(colormapIndex(peakIndex(cellIndex)),:),'MarkerSize',1);
-            patch(x,y,C(colormapIndex(peakIndex(cellIndex)),:),'EdgeColor','none');
+            patch(x,y,C(colormapIndex(tuningPeak(cellIndex)),:),'EdgeColor','none');
         else
             patch(x,y,[0.8 0.8 0.8],'EdgeColor','none');
             %plot(x,y,'.','color',[0.8 0.8 0.8],'MarkerSize',1);
@@ -452,6 +466,7 @@ if saveSingleNeuronFlag
             tic;
 
             tuningFig = figure('visible','off');
+            set(gcf, 'Units', 'Normalized', 'OuterPosition', [0.15, 0.04, 0.6, 0.9]);% Enlarge figure to full screen.
             cellIndex = neuronPlane(j) + i;
             % REMEMBER TO CHANGE THIS LINE
             %cd([suite2ppath '\plane' num2str(j-1)]);
@@ -466,7 +481,7 @@ if saveSingleNeuronFlag
 
             x=roisBound{j}{i}(:,1); %freehand rois have the outlines in x-y coordinates
             y=roisBound{j}{i}(:,2); %matlab matrices are inverted so x values are the 2nd column of mn coordinates, and y is the 1st columna
-            patch(x,y,'g','EdgeColor','none');
+            patch(x,y,C(colormapIndex(tuningPeak(cellIndex)),:),'EdgeColor','none');
             title(['Cell #' int2str(cellIndex) ' Plane #' int2str(j) ' FoV'])
 
             subplot(4,2,2)

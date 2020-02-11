@@ -16,16 +16,17 @@ else
     roiType = p.Results.roiType;
 end
 nFrames_oneplane = p.Results.nFrames_oneplane;
+nFrames_oneplane_select = nFrames_oneplane(logical(p.Results.filenameTCFlag),:);
 %[nFrames_oneplane,nFrames,nFrames_add, nPlanes] = func_getSbxFrames('mouse',p.Results.mouse,'root',p.Results.root,'filename',{filename},'sbxpath',p.Results.sbxpath);
 
 cd(p.Results.suite2ppath);
-TC = []; neuronEachPlane = nan(nPlanes,1);
+neuronEachPlane = nan(nPlanes,1);
 roisCoord = cell(1,nPlanes);
-
+TC = cell(1,nPlanes);
 for i=1:nPlanes
     cd([p.Results.suite2ppath '\plane' num2str(i-1)]);
     data = load('Fall.mat'); 
-    tc = data.F;
+    tempTC = data.F;
     
     switch roiType
     case 'axon'
@@ -45,13 +46,13 @@ for i=1:nPlanes
         tempTC = tempTC(logical(iscellFlag),frameIndex_thisPlane);
         
         % TEMP solution: 2nd plane generally have 1 less frame. 
-        if size(TC,1)>0
-            TC = [TC [tc(logical(iscellFlag),:)';nan(1,sum(iscellFlag))]];
-        else
-            TC = [TC tc(logical(iscellFlag),:)']; % time by neuron
-        end     
+            
     end
     
+    TC{i} = tempTC(logical(iscellFlag),:);    
     neuronEachPlane(i) = sum(iscellFlag);
     roisCoord{i} = data.stat(logical(iscellFlag))';
+end
+TC = func_attachNanFrames(TC, nFrames_oneplane_select,varargin{:});
+
 end
