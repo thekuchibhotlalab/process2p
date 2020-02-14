@@ -103,7 +103,6 @@ for i=1:length(allDay)
     list_f{i} = sessionIdx_thisday;
     b_count = b_count + length(sessionIdx_thisday_behav);
 end
-
 %---------TONE FRAME FOR EACH SESSION-----------
 for i = 1:length(behavDay)
     this_day = behavDay(i);
@@ -199,7 +198,7 @@ nCells = size(zfluo,1);
 if ~exist([roipath sep 'ishere_plane' num2str(i-1) '.mat'],'file')
     ishere = nan(nCells,nDays);
     c = 1;
-else
+else 
     ishere = load([roipath sep  'ishere_plane' num2str(i-1) '.mat']);
     ishere = ishere.ishere;       
     c = size(ishere(~any(isnan(ishere),2),:),1)+1;
@@ -275,6 +274,7 @@ for j=c:nCells
         traces_target = reshape(m_target,nframes_psth,l);
         plot(traces_target,'color',[0.8 0.8 0.8]);plot(mean(traces_target,2),'k','linewidth',2);
         ylim(ylimm1);
+%             PlotIntervals([pretone*round(acq) pretone*round(acq)+0.1*round(acq)],'color','g');
         PlotHVLines(pretone*round(acq),'v','color','g','linewidth',1);
         title(['D' num2str(k)]);
         axis off;
@@ -298,17 +298,17 @@ for j=c:nCells
     marginFlag = 0;
     subplot_day = cell(1,nDays);
     for k=1:nDays
-        if isempty(avg_day{k}), continue;end
-        subplot_day{k} = subplot_tight(4,nCol,nCol*4-nCol*2+k,margins);      
+        if isempty(avg_day{k,i}), continue;end
+        subplot_day{k} = subplot_tight(4,nCol,nCol*4-nCol*2+k,margins);
         % Try new contrast adjustment method
         hold on;
         extraMargin = 20;
         if (ylimm(1)-extraMargin) < 1  || (xlimm(1)-extraMargin) < 1 ||...
-                (ylimm(2)+extraMargin)> size(avg_day{k},1) || (xlimm(2)+extraMargin) > size(avg_day{k},2)
-            extraMargin = min([ylimm(1), xlimm(1) size(avg_day{k},1)-ylimm(2)   size(avg_day{k},2)-xlimm(1)])-1;
+                (ylimm(2)+extraMargin)> size(avg_day{k,i},1) || (xlimm(2)+extraMargin) > size(avg_day{k,i},2)
+            extraMargin = min([ylimm(1), xlimm(1) size(avg_day{k,i},1)-ylimm(2)   size(avg_day{k,i},2)-xlimm(1)])-1;
             marginFlag = 1;
         end
-        localImg = uint16(avg_day{k}(ylimm(1)-extraMargin:ylimm(2)+extraMargin, xlimm(1)-extraMargin:xlimm(2)+extraMargin));
+        localImg = uint16(avg_day{k,i}(ylimm(1)-extraMargin:ylimm(2)+extraMargin, xlimm(1)-extraMargin:xlimm(2)+extraMargin));
         localImgList{k} = localImg;
         imagesc(imadjust(adapthisteq(localImg, 'NBins', 256),[0 1],[0 1],0.2)); 
         xlim([extraMargin+1 xlimm(2)-xlimm(1)+extraMargin+1]);ylim([extraMargin+1 ylimm(2)-ylimm(1)+extraMargin+1]);
@@ -407,14 +407,14 @@ for j=c:nCells
         pat = patch(subplot_day{k},yroi-round(xlimm(1)-extraMargin)+1, xroi-round(ylimm(1)-extraMargin)+1,'r','EdgeColor','none');
         pat.FaceAlpha = 0.3;
     end
-    %pause(2);
+    pause(2);
     ishere(j,:) = tempIsCell;
     for d = 1:nDays
         roi_redrawn(j,d,:) = tempRoiCoord(d,:);
     end
     close(figdays);
 
-    saveFig = figure('visible','off');
+    saveFig = figure;
     set(saveFig, 'Units', 'Normalized', 'OuterPosition', [0.15, 0.04, 0.85, 0.96]);
 
     tempCol = ceil(nDays/4);
@@ -439,7 +439,7 @@ for j=c:nCells
             pat1.EdgeColor = 'r';
         end
     end
-    %pause(2);
+    pause(2);
     saveas(saveFig,[roipath sep 'checkCell' sep 'check_cell_plane' num2str(i-1) 'cell' int2str(j) '.png']);
     close(saveFig)
 
@@ -447,6 +447,10 @@ for j=c:nCells
     save([roipath sep 'ishere_plane' num2str(i-1) '.mat'],'ishere');
     save([roipath sep 'roi_redrawn_plane' num2str(i-1) '.mat'],'roi_redrawn');
 end
+warning('on')
+
+
+
 end
 
 % GUI functions
@@ -517,7 +521,7 @@ function redraw_callback(hObject,eventdata,nDay,nCell,imgData)
         
     else % if triggered from on --> off, delete redrawn roi
         tempRoiCoord{nDay,1} = 0;
-        tempRoiCoord(nDay,2:3) = origRoiCoord(nDay,2:3);
+        tempRoiCoord(nDay,2:3) = origRoiCoord(nDay,2:3);       
     end
 end
 
