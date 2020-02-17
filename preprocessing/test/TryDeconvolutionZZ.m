@@ -13,21 +13,21 @@
 %    end
 % end
 
-mouse = 'cd017';
+mouse = 'cd036';
 global info;
 
 if strcmp(mouse,'cd017')
-    suite2ppath = 'H:\celine\cd017\suite2p\';
-    h5path = 'W:\LabData4\celine\cd017\h5\'; % h5path = 'H:\celine\cd017\h5\';
-    sbxpath = 'W:\LabData4\celine\cd017\';
-    behavpath = 'W:\LabData4\celine\cd017\behavior\';
+    suite2ppath = 'I:\celine\cd017\suite2p\';
+    h5path = 'V:\LabData4\celine\cd017\h5\'; % h5path = 'H:\celine\cd017\h5\';
+    sbxpath = 'V:\LabData4\celine\cd017\';
+    behavpath = 'V:\LabData4\celine\cd017\behavior\';
 end
 
 if strcmp(mouse,'cd036')
-    suite2ppath = 'H:\celine\cd036\suite2p\';
-    h5path = 'H:\celine\cd036\'; 
-    sbxpath = 'V:\LabData5\cd036\';
-    behavpath = 'V:\LabData5\cd036\behavior\';
+    suite2ppath = 'I:\celine\cd036\suite2p\';
+    h5path = 'U:\LabData5\cd036\'; 
+    sbxpath = 'U:\LabData5\cd036\';
+    behavpath = 'U:\LabData5\cd036\behavior\';
 end
 
 % Default values
@@ -295,9 +295,9 @@ end
 
 %% get rid of baseline
 allSessList = list_f;
-allSessList{1} = [1;2];
-allSessList{18} = [84];
-allSessList{19} = [85];
+allSessList{1} = [1;2;3;4];
+allSessList{18} = [71;72];
+allSessList{19} = [73;74];
 signals_nothereremoved = {};
 for i=1:nPlanes
     %cd([suite2ppath 'plane' num2str(i-1)]);
