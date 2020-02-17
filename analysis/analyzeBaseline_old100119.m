@@ -1,5 +1,3 @@
-%%
-
 mouse = 'cd017';
 if strcmp(mouse,'cd017')
     baselineFile = [6 11 16 21 26 31 36 41 46 51 56 61 66 71 76 82];

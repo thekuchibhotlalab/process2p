@@ -1,8 +1,56 @@
-%% load data
+mouse = 'cd036';
+if strcmp(mouse,'cd017')
+    baselineFile = [6 11 16 21 26 31 36 41 46 51 56 61 66 71 76 82];
+elseif strcmp(mouse,'cd036')
+    baselineFile = [8 13 18 22 26 30 34 38 42 46 50 54 58 62 66 70 71 73];
+end
+sessionList = 1:length(baselineFile);
+nPlanes = 2;
+%sessionList = [length(baselineFile)-3 length(baselineFile)-1];
+%sessionList = [1 2];
 
+dffBaseline = {};
+spikeBaseline = {};
+smoothSpikeBaseline = {};
+shuffleSpikeBaseline= {};
+
+allCorrPairDff = cell(1,length(sessionList));
+allCorrPairSpike = cell(1,length(sessionList));
+allCorrPairSmoothSpike = cell(1,length(sessionList));
+allCorrPairSpikeShuffle = cell(1,length(sessionList));
+
+allCorrMatDff = cell(1,length(sessionList));
+allCorrMatSpike = cell(1,length(sessionList));
+allCorrMatSmoothSpike = cell(1,length(sessionList));
+allCorrMatSpikeShuffle = cell(1,length(sessionList));
+
+ishereBaseline{1} = sum(ishere{1}(:,sessionList+1),2); %+1 beacuse 1 day of tuning curve
+ishereBaseline{2} = sum(ishere{2}(:,sessionList+1),2); %+1 beacuse 1 day of tuning curve
+sum(ishereBaseline{1} == length(sessionList))
+sum(ishereBaseline{2} == length(sessionList))
+ishereBaseline{1} = (ishereBaseline{1}==length(sessionList));
+ishereBaseline{2} = (ishereBaseline{2}==length(sessionList));
 %%
-data = load('T:\LabData6\ziyi\cd017\cd017_baseline.mat');
-% data contains variables: dffBaseline spikeBaseline smoothSpikeBaseline shuffleSpikeBaseline
+for j = 1:length(baselineFile)
+    tempDff = [];
+    tempSpike = [];
+    tempSpikeSmooth = [];
+    tempSpikeShuffle = [];
+    for i = 1:nPlanes
+        % use +(2-i) as a dirty way to get rid of the extra frame of plane 1 in the beginning
+        tempDff = [tempDff;signals{i}(ishereBaseline{i},nFrames_oneplane(baselineFile(j),i)+1+(2-i):nFrames_oneplane(baselineFile(j)+1,i))];
+        %dffBaseline{i,j} = signals{i}(ishereBaseline{i},nFrames_oneplane(baselineFile(j),i)+1:nFrames_oneplane(baselineFile(j)+1,i),2);
+        tempSpike=[tempSpike;s_deconvolve_by_trial{i}(ishereBaseline{i},nFrames_oneplane(baselineFile(j),i)+1+(2-i):nFrames_oneplane(baselineFile(j)+1,i))];
+        % smooth using 200ms moving window
+        tempSpikeSmooth = [tempSpikeSmooth;smoothdata(s_deconvolve_by_trial{i}(ishereBaseline{i},nFrames_oneplane(baselineFile(j),i)+1+(2-i):nFrames_oneplane(baselineFile(j)+1,i)),'movmean',3)];
+        tempSpikeShuffle = [tempSpikeShuffle;Shuffle(s_deconvolve_by_trial{i}(ishereBaseline{i},nFrames_oneplane(baselineFile(j),i)+1+(2-i):nFrames_oneplane(baselineFile(j)+1,i)))];
+    end
+    dffBaseline{j} = tempDff;
+    spikeBaseline{j} = tempSpike; 
+    smoothSpikeBaseline{j} = tempSpikeSmooth;
+    shuffleSpikeBaseline{j} = tempSpikeShuffle;
+end
+
 %%
 tic;
 nNeurons = size(dffBaseline{j},1);
