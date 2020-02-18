@@ -1,12 +1,12 @@
 %% load data
-load('T:\LabData6\ziyi\cd017\cd017_baseline.mat');
-%load('T:\LabData6\ziyi\cd036\cd036_baseline.mat');
-spikeBaseline = spikeBaseline(1:end-1);
+%load('T:\LabData6\ziyi\cd017\cd017_baseline.mat');
+load('T:\LabData6\ziyi\cd036\cd036_baseline.mat');
+%spikeBaseline = spikeBaseline(1:end-1);
 %cellselect = sum(cell2mat(spikeBaseline),2)>1000;
 % data contains variables: dffBaseline spikeBaseline smoothSpikeBaseline shuffleSpikeBaseline
 %%
 tic;
-nNeurons = size(spikeBaseline{1},1);
+nNeurons = size(dffBaseline{1},1);
 for j = 1:length(spikeBaseline) % the first and last session
     a = triu(ones(nNeurons));
     trid = (a==0);
@@ -71,21 +71,21 @@ corrMed = [];
 corrStd = [];
 varExp = {};
 angleEV1 = [];
-for i = 1:length(spikeBaseline)-1
+for i = 1:length(dffBaseline)-2
     figure(1);subplot_tight(5,4,i);plot(limit,limit,'Color',[0.8 0.8 0.8]); hold on;
-    scatter(allCorrPairSpike{i},allCorrPairSpike{i+1},dotSize,'.');xlim(limit);ylim(limit); 
+    scatter(allCorrPairDff{i},allCorrPairDff{i+1},dotSize,'.');xlim(limit);ylim(limit); 
     title(['day' int2str(i)])
     
-    figure(2);subplot_tight(5,4,i);h = histogram(allCorrPairSpike{i},edges);h.EdgeColor = 'none'; hold on;
-    h = histogram(allCorrPairSpike{i+1},edges);h.EdgeColor = 'none'; hold on;
+    figure(2);subplot_tight(5,4,i);h = histogram(allCorrPairDff{i},edges);h.EdgeColor = 'none'; hold on;
+    h = histogram(allCorrPairDff{i+1},edges);h.EdgeColor = 'none'; hold on;
     ylim([0 8000])
     title(['day' int2str(i)])
     if (i==1)
         legend('day before', 'day after')
     end
     
-    corrMed(i) = median(allCorrPairSpike{i});
-    corrStd(i) = std(allCorrPairSpike{i});
+    corrMed(i) = median(allCorrPairDff{i});
+    corrStd(i) = std(allCorrPairDff{i});
     
 end
 figure(3)
@@ -175,24 +175,24 @@ tempCorrMat = allCorrMatSpike{1};
 %h=histogram(allCorrPairSpikeShuffle{2,1},edges);h.EdgeColor = 'none';  hold on; 
 %h=histogram(allCorrPairSpikeShuffle{2,2},edges);h.EdgeColor = 'none'; 
 %% scatter plot of changes
-% limit = [-0.2 1];
-% dotSize = 8;
-% figure; subplot(1,4,1);plot(limit,limit,'Color',[0.8 0.8 0.8]); hold on
-% scatter(allCorrPairDff{1,1},allCorrPairDff{1,2},dotSize,'.');xlim(limit);ylim(limit); 
-% %subplot(4,2,2);plot(limit,limit,'Color',[0.8 0.8 0.8]); hold on
-% %scatter(allPairCorr{2,1},allPairCorr{2,2},dotSize,'.');xlim(limit);ylim(limit); 
-% 
-% subplot(1,4,2);plot(limit,limit,'Color',[0.8 0.8 0.8]); hold on
-% scatter(allCorrPairSpike{1,1},allCorrPairSpike{1,2},dotSize,'.');xlim(limit);ylim(limit); 
-% %subplot(4,2,4);plot(limit,limit,'Color',[0.8 0.8 0.8]); hold on
-% %scatter(allCorrPairSpike{2,1},allCorrPairSpike{2,2},dotSize,'.');xlim(limit);ylim(limit); 
-% 
-% subplot(1,4,3);plot(limit,limit,'Color',[0.8 0.8 0.8]); hold on
-% scatter(allCorrPairSmoothSpike{1,1},allCorrPairSmoothSpike{1,2},dotSize,'.');xlim(limit);ylim(limit); 
-% %subplot(4,2,6);plot(limit,limit,'Color',[0.8 0.8 0.8]); hold on
-% %scatter(allCorrPairSmoothSpike{2,1},allCorrPairSmoothSpike{2,2},dotSize,'.');xlim(limit);ylim(limit); 
-% 
-% subplot(1,4,4);plot(limit,limit,'Color',[0.8 0.8 0.8]); hold on
-% scatter(allCorrPairSpikeShuffle{1,1},allCorrPairSpikeShuffle{1,2},dotSize,'.');xlim(limit);ylim(limit); 
+limit = [-0.2 1];
+dotSize = 8;
+figure; subplot(1,4,1);plot(limit,limit,'Color',[0.8 0.8 0.8]); hold on
+scatter(allCorrPairDff{1,1},allCorrPairDff{1,2},dotSize,'.');xlim(limit);ylim(limit); 
+%subplot(4,2,2);plot(limit,limit,'Color',[0.8 0.8 0.8]); hold on
+%scatter(allPairCorr{2,1},allPairCorr{2,2},dotSize,'.');xlim(limit);ylim(limit); 
+
+subplot(1,4,2);plot(limit,limit,'Color',[0.8 0.8 0.8]); hold on
+scatter(allCorrPairSpike{1,1},allCorrPairSpike{1,2},dotSize,'.');xlim(limit);ylim(limit); 
+%subplot(4,2,4);plot(limit,limit,'Color',[0.8 0.8 0.8]); hold on
+%scatter(allCorrPairSpike{2,1},allCorrPairSpike{2,2},dotSize,'.');xlim(limit);ylim(limit); 
+
+subplot(1,4,3);plot(limit,limit,'Color',[0.8 0.8 0.8]); hold on
+scatter(allCorrPairSmoothSpike{1,1},allCorrPairSmoothSpike{1,2},dotSize,'.');xlim(limit);ylim(limit); 
+%subplot(4,2,6);plot(limit,limit,'Color',[0.8 0.8 0.8]); hold on
+%scatter(allCorrPairSmoothSpike{2,1},allCorrPairSmoothSpike{2,2},dotSize,'.');xlim(limit);ylim(limit); 
+
+subplot(1,4,4);plot(limit,limit,'Color',[0.8 0.8 0.8]); hold on
+scatter(allCorrPairSpikeShuffle{1,1},allCorrPairSpikeShuffle{1,2},dotSize,'.');xlim(limit);ylim(limit); 
 %subplot(4,2,8);plot(limit,limit,'Color',[0.8 0.8 0.8]); hold on
 %scatter(allCorrPairSpikeShuffle{2,1},allCorrPairSpikeShuffle{2,2},dotSize,'.');xlim(limit);ylim(limit); 
