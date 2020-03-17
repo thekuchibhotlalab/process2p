@@ -16,6 +16,7 @@ else
     roiType = p.Results.roiType;
 end
 nFrames_oneplane = p.Results.nFrames_oneplane;
+nFrames_oneplane_cumsum = [zeros(1,nPlanes); cumsum(nFrames_oneplane)];
 nFrames_oneplane_select = nFrames_oneplane(logical(p.Results.filenameTCFlag),:);
 %[nFrames_oneplane,nFrames,nFrames_add, nPlanes] = func_getSbxFrames('mouse',p.Results.mouse,'root',p.Results.root,'filename',{filename},'sbxpath',p.Results.sbxpath);
 
@@ -41,9 +42,9 @@ for i=1:nPlanes
         fileIndex = find(p.Results.filenameTCFlag==1);
         for k = fileIndex
             frameIndex_thisPlane = [frameIndex_thisPlane ...
-                (nFrames_oneplane(k,j)+1):nFrames_oneplane(k+1,j)]; 
+                (nFrames_oneplane_cumsum(k,i)+1):nFrames_oneplane_cumsum(k+1,i)]; 
         end
-        tempTC = tempTC(logical(iscellFlag),frameIndex_thisPlane);
+        tempTC = tempTC(:,frameIndex_thisPlane);
         
         % TEMP solution: 2nd plane generally have 1 less frame. 
             

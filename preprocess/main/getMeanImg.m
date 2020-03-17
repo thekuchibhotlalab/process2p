@@ -15,7 +15,7 @@ sbxpath = p.Results.sbxpath;
 suite2ppath = p.Results.suite2ppath;
 h5path = p.Results.h5path;
 datapath = p.Results.datapath;
-roiFile = p.Results.roiFile;
+savepath = p.Results.savepath;
 nFrames_oneplane = p.Results.nFrames_oneplane;
 %---------CHECK NUMBER OF CHANNELS-----------
 data = load([p.Results.sbxpath sep filenames{1} '.mat']); 
@@ -33,7 +33,7 @@ end
 [nFuncChannel, functionalChannel, roiType] = func_getFuncChanRoiType(varargin{:});
 
 %---------SAVE MEAN IMAGE OF ALL SESSIONS-----------
-imgPath = [datapath sep 'meanImg' sep]; % 2 channel does not work, suite2p only saves meanImg for 2nd channel
+imgPath = [savepath sep 'meanImg' sep]; % 2 channel does not work, suite2p only saves meanImg for 2nd channel
 mkdir(imgPath)
 for i = 1:nPlanes
     for chan = 1:nFuncChannel
@@ -68,7 +68,7 @@ for i=1:nPlanes
         for j=1:nFiles
             k=0; a=1;
             nimg = nFrames_oneplane(j,i);
-            blksize = 7000;%2000; % nb of frames loaded at a time (depend on RAM)
+            blksize = 5000;%2000; % nb of frames loaded at a time (depend on RAM)
             to_read = min(blksize,nimg-k);  
             avgA = []; avgA = nan(lx,ly);
             while to_read>0

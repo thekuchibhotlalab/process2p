@@ -1,4 +1,4 @@
-function T = func_createMouseConfig(mouse, h5path)
+function T = func_createMouseConfig(mouse, h5path,sbxpath)
 
 cd(h5path);
 files = dir('*.h5');
@@ -34,6 +34,7 @@ nPlanes = 2;
 nFrames_oneplane = zeros(length(names),2);
 nFrames = zeros(length(names),1);
 global info
+cd(sbxpath)
 for i=1:length(names)
     sbxread(names{i},1,1);
     nFrames(i) = info.max_idx;

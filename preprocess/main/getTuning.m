@@ -89,11 +89,11 @@ baselineFrames = 5;
 nNeuron = size(TC,2);
 smoothWindow = 5;
 sep = '\';
-saveSingleNeuronFlag = true;
-
+saveSingleNeuronFlag = false;
+toneOnset = 0/nPlanes;
 %---------SHIFT THE TC FOR PRETONE PERIOD-----------
 TC_original = TC; % keep a copy of original TC
-TC = circshift(TC,1,1); % shift 1 on 1st axix so that tone is on frame 1 instead of 0
+TC = circshift(TC,1-toneOnset,1); % shift 1 on 1st axix so that tone is on frame 1 instead of 0
 %---------GAUSSIAN FILTER TO SMOOTH THE TRACES-----------
 TC = smoothdata(TC,1,'gaussian',smoothWindow);
 TCpretone = circshift(TC,pretoneFrames,1);
@@ -161,7 +161,7 @@ saveas(gcf,[ savePath ...
         '/population/populationTonePSTH.png']);
 
 %---------PLOT PEAK FRAME-----------
-[maxValue,peakIndex] = max(toneMean(pretoneFrames+3:pretoneFrames+1+ceil(frameRate*0.66),:),[],1);
+[maxValue,peakIndex] = max(toneMean(pretoneFrames+1:pretoneFrames+ceil(frameRate*0.66),:),[],1);
 %[maxValue,peakIndex] = max(toneMean(pretoneFrames+1:pretoneFrames+1+frameRate,:),[],1);
 latFig = figure;
 set(gcf, 'Units', 'Normalized', 'OuterPosition', [0.15, 0.04, 0.45, 0.56]);% Enlarge figure to full screen.
@@ -230,11 +230,11 @@ pairedTestTrials = 2:10; % trial 1 does not have pair for baseline
 % paired ttest for peak-base>0
 ttestToneP = zeros(nTones,nNeuron);
 ttestToneH = zeros(nTones,nNeuron);
-ttestAlpha = 0.005;
+ttestAlpha = 0.05;
 % sign rank test for peak-base>0
 signrankToneP = zeros(nTones,nNeuron);
 signrankToneH = zeros(nTones,nNeuron);
-signrankAlpha = 0.005;
+signrankAlpha = 0.05;
 % anova test for any group difference + at least one tone above baseline
 anovaPeak = zeros(2,nNeuron);
 anovaSignifTone = zeros(nTones,nNeuron);
@@ -303,10 +303,8 @@ end
 
 %---------SELECT CRITERIA FOR RESPONSIVE CELL-----------
 responsiveCellFlag = anovaPeakCorr(2,:);
-allDataName = {'ttestToneP','ttestToneH','ttestAlpha','signrankToneP',...
-'signrankToneH','signrankAlpha','anovaPeak','anovaSignifTone',...
-'anovaPeakCorr','anovaSignifToneCorr','rocAuc','rocTpr','rocAucZscore'};
-save([savePath '/population/tuning.mat'],allDataName{:});
+
+
 %---------PLOT SIGNICANT TEST RESULTS ON POPULATION LEVEL-----------
 tuningPeakIndexMedian = zeros(1,nNeuron);
 tuningPeakIndexMean = zeros(1,nNeuron);
@@ -403,7 +401,7 @@ figure;
 for i = 1:nPlanes
     %cd([suite2ppath '\plane' num2str(i-1)]);
     data = load([suite2ppath sep 'plane' num2str(i-1) sep 'Fall.mat']); 
-    refImg = data.ops.meanImg;
+    refImg{i} = data.ops.meanImg;
     colormapIndex = round(linspace(1,64,17));
     C = colormap('jet');
     
@@ -414,12 +412,12 @@ for i = 1:nPlanes
     %end
     
     subplot(2,2,i);           
-    imagesc(refImg);colormap gray;hold on;
-    ylim([0 size(refImg,1)]);xlim([0 size(refImg,2)]);
+    imagesc(refImg{i});colormap gray;hold on;
+    ylim([0 size(refImg{i},1)]);xlim([0 size(refImg{i},2)]);
     
     subplot(2,2,2+i);             
-    imagesc(refImg);colormap gray;hold on;
-    ylim([0 size(refImg,1)]);xlim([0 size(refImg,2)]);
+    imagesc(refImg{i});colormap gray;hold on;
+    ylim([0 size(refImg{i},1)]);xlim([0 size(refImg{i},2)]);
 
     for j = 1:neuronEachPlane(i)
         cellIndex = neuronPlane(i) + j;
@@ -438,6 +436,21 @@ end
 
 saveas(gcf,[savePath...
         '/population/tuningMap.png']);
+    
+allDataName = {'anovaPeak', 'anovaSignifTone',...
+    'anovaPeakCorr','anovaSignifToneCorr',...
+    'popTuningMean', 'popTuningMedian',...
+    'popTuningPeakMean', 'popTuningPeakMedian','peakFrames',...
+    'rocAuc','rocTpr', 'rocAucZscore',...
+    'signrankToneH', 'signrankToneP','signrankAlpha',...
+    'ttestToneH', 'ttestToneP','ttestAlpha',...
+    'tuningPeak','tuningPeakIndexMean', 'tuningPeakIndexMedian',...
+    'toneRespCount','refImg','roisBound','neuronPlane','neuronEachPlane',...
+    'TC_original','TCpretone_reorder','TCpretone_reorderCorr',...
+    'trialMean','trialMedian'};
+save([savePath '/population/tuning.mat'],allDataName{:});
+    
+    
 %saveas(gcf,[tuningFolderName...
 %    '/population/tuningMap.m']);
 
@@ -462,6 +475,8 @@ if saveSingleNeuronFlag
         %cellThisPlane = length(rois);
         %startingIndex = sum(cellPerPlane);
         %cellPerPlane(j) = cellThisPlane;
+        %data = load([suite2ppath sep 'plane' num2str(j-1) sep 'Fall.mat']); 
+        %refImg = data.ops.meanImg;
         for i = 1:neuronEachPlane(j)
             tic;
 
@@ -470,10 +485,9 @@ if saveSingleNeuronFlag
             cellIndex = neuronPlane(j) + i;
             % REMEMBER TO CHANGE THIS LINE
             %cd([suite2ppath '\plane' num2str(j-1)]);
-            data = load([suite2ppath sep 'plane' num2str(j-1) sep 'Fall.mat']); 
-            refImg = data.ops.meanImg;
+            
             subplot(2,2,1)
-            imagesc(refImg);colormap gray;hold on;
+            imagesc(refImg{j});colormap gray;hold on;
 
             %x=roisCoord{i+currentNeuron(j)}.xpix; %freehand rois have the outlines in x-y coordinates
             %y=roisCoord{i+currentNeuron(j)}.ypix; %matlab matrices are inverted so x values are the 2nd column of mn coordinates, and y is the 1st columna
@@ -517,8 +531,8 @@ if saveSingleNeuronFlag
 
             subplot(2,2,3)
             [rocMax,rocMaxIdx] = max(rocAuc(:,cellIndex));
-            peakAct = squeeze(TCpretone_reorder(pretoneFrames+peakFrames(i),:,:,i));
-            baseAct = squeeze(TCpretone_reorder(pretoneFrames-4:pretoneFrames,:,:,i));
+            peakAct = squeeze(TCpretone_reorder(pretoneFrames+peakFrames(cellIndex),:,:,cellIndex));
+            baseAct = squeeze(TCpretone_reorder(pretoneFrames-4:pretoneFrames,:,:,cellIndex));
 
             rocAct = [baseAct(:)' peakAct(rocMaxIdx,:)];
             rocLabel = [zeros(1,numel(baseAct)) ones(1,nTrials)];
