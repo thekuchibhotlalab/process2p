@@ -28,5 +28,6 @@ p.addParameter('roiFile', [])
 p.addParameter('tcFile', [])
 p.addParameter('filenameTCFlag', [])
 p.addParameter('filenameTC', [])
+p.addParameter('sep', '\')
 
 end

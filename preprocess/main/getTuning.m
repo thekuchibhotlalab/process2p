@@ -89,7 +89,7 @@ baselineFrames = 5;
 nNeuron = size(TC,2);
 smoothWindow = 5;
 sep = '\';
-saveSingleNeuronFlag = false;
+saveSingleNeuronFlag = true;
 toneOnset = 0/nPlanes;
 %---------SHIFT THE TC FOR PRETONE PERIOD-----------
 TC_original = TC; % keep a copy of original TC

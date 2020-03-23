@@ -27,11 +27,6 @@ switch mouse
         postName = 'cd044_016_001';
         target = 9514;
         foil = 16000;
-    case 'cd019'
-        preName = 'cd019_000_001';
-        postName = 'cd019_016_007';
-        target = 6727;
-        foil = 4000;
         
 end
 preTuning = load(['D:\labData\excitatory\tuning\' preName '_Tuning\population\tuning.mat']);
@@ -71,16 +66,6 @@ respCellFlag = responsiveFlagPre | responsiveFlagPost;
 
 responsiveTonePre = preTuning.anovaSignifToneCorr;
 responsiveTonePost = postTuning.anovaSignifToneCorr;
-
-peakCountPreAll = sum(preTuning.tuningPeak(logical(responsiveFlagPre)) == (1:17)',2);
-peakCountPostAll = sum(postTuning.tuningPeak(logical(responsiveFlagPost)) == (1:17)',2);
-figure;
-plot(peakCountPreAll,'LineWidth',3); hold on; plot(peakCountPostAll,'LineWidth',3); 
-ylimm = ylim; xlim([1 17])
-plot([targIdx targIdx],ylimm,'--g');plot([foilIdx foilIdx],ylimm,'--r');
-legend('pre','post');
-xlabel('tone'); ylabel('counts')
-
 
 allToneIdx = 1:17;
 for i = 1:nPlanes
@@ -170,8 +155,8 @@ end
 peak.pre = preTuning.tuningPeak;
 peak.post = postTuning.tuningPeak;
 peak.tuningChange = tuningChange;
-peak.tuningUp = sum(tuningChange(staySel)<0);
-peak.tuningDown = sum(tuningChange(staySel)>0);
+peak.tuningUp = sum(tuningChange(staySel)>0);
+peak.tuningDown = sum(tuningChange(staySel)<0);
 peak.tuningStay = sum(tuningChange(staySel)==0);
 
 peak.dist.tPreDist = abs(targIdx - preTuning.tuningPeak);
@@ -179,7 +164,7 @@ peak.dist.fPreDist = abs(foilIdx - preTuning.tuningPeak);
 peak.dist.tPostDist = abs(targIdx - postTuning.tuningPeak);
 peak.dist.fPostDist = abs(foilIdx - postTuning.tuningPeak);
 
-if targIdx > foilIdx
+if targIdx < foilIdx
     peak.tPre.stay = sum(tuningChange(tPre & staySel)==0);
     peak.tPre.switch = sum(tuningChange(tPre & staySel)>0);
     peak.tPre.away = sum(tuningChange(tPre & staySel)<0);
@@ -193,15 +178,15 @@ if targIdx > foilIdx
     peak.middlePre.F = sum(tuningChange(middlePre & staySel)>0);
 
     peak.tSidePre.stay = sum(tuningChange(tSidePre & staySel)<=0);
-    peak.tSidePre.closeT = sum(tuningChange(tSidePre & staySel)>0 & (postTuning.tuningPeak(tSidePre & staySel) > mean([targIdx foilIdx]) )  );
-    peak.tSidePre.closeF = sum(tuningChange(tSidePre & staySel)>0 & (postTuning.tuningPeak(tSidePre & staySel) < mean([targIdx foilIdx]) )  );
+    peak.tSidePre.closeT = sum(tuningChange(tSidePre & staySel)>0 & (postTuning.tuningPeak(tSidePre & staySel) < mean([targIdx foilIdx]) )  );
+    peak.tSidePre.closeF = sum(tuningChange(tSidePre & staySel)>0 & (postTuning.tuningPeak(tSidePre & staySel) > mean([targIdx foilIdx]) )  );
 
     peak.fSidePre.stay = sum(tuningChange(fSidePre & staySel)>=0);
-    peak.fSidePre.closeT = sum(tuningChange(fSidePre & staySel)<0 & (postTuning.tuningPeak(fSidePre & staySel) > mean([targIdx foilIdx]) )  );
-    peak.fSidePre.closeF = sum(tuningChange(fSidePre & staySel)<0 & (postTuning.tuningPeak(fSidePre & staySel) < mean([targIdx foilIdx]) )  );
+    peak.fSidePre.closeT = sum(tuningChange(fSidePre & staySel)<0 & (postTuning.tuningPeak(fSidePre & staySel) < mean([targIdx foilIdx]) )  );
+    peak.fSidePre.closeF = sum(tuningChange(fSidePre & staySel)<0 & (postTuning.tuningPeak(fSidePre & staySel) > mean([targIdx foilIdx]) )  );
 
-    peak.noPre.closeT = sum(gainSel & (postTuning.tuningPeak > mean([targIdx foilIdx]) )  );
-    peak.noPre.closeF = sum(gainSel & (postTuning.tuningPeak < mean([targIdx foilIdx]) )  );
+    peak.noPre.closeT = sum(gainSel & (postTuning.tuningPeak < mean([targIdx foilIdx]) )  );
+    peak.noPre.closeF = sum(gainSel & (postTuning.tuningPeak > mean([targIdx foilIdx]) )  );
 
 else
     peak.tPre.stay = sum(tuningChange(tPre & staySel)==0);
@@ -217,15 +202,15 @@ else
     peak.middlePre.F = sum(tuningChange(middlePre & staySel)<0);
 
     peak.tSidePre.stay = sum(tuningChange(tSidePre & staySel)>=0);
-    peak.tSidePre.closeT = sum(tuningChange(tSidePre & staySel)<0 & (postTuning.tuningPeak(tSidePre & staySel) < mean([targIdx foilIdx]) )  );
-    peak.tSidePre.closeF = sum(tuningChange(tSidePre & staySel)<0 & (postTuning.tuningPeak(tSidePre & staySel) > mean([targIdx foilIdx]) )  );
+    peak.tSidePre.closeT = sum(tuningChange(tSidePre & staySel)<0 & (postTuning.tuningPeak(tSidePre & staySel) > mean([targIdx foilIdx]) )  );
+    peak.tSidePre.closeF = sum(tuningChange(tSidePre & staySel)<0 & (postTuning.tuningPeak(tSidePre & staySel) < mean([targIdx foilIdx]) )  );
 
     peak.fSidePre.stay = sum(tuningChange(fSidePre & staySel)<=0);
-    peak.fSidePre.closeT = sum(tuningChange(fSidePre & staySel)>0 & (postTuning.tuningPeak(fSidePre & staySel) < mean([targIdx foilIdx]) )  );
-    peak.fSidePre.closeF = sum(tuningChange(fSidePre & staySel)>0 & (postTuning.tuningPeak(fSidePre & staySel) > mean([targIdx foilIdx]) )  );
+    peak.fSidePre.closeT = sum(tuningChange(fSidePre & staySel)>0 & (postTuning.tuningPeak(fSidePre & staySel) > mean([targIdx foilIdx]) )  );
+    peak.fSidePre.closeF = sum(tuningChange(fSidePre & staySel)>0 & (postTuning.tuningPeak(fSidePre & staySel) < mean([targIdx foilIdx]) )  );
 
-    peak.noPre.closeT = sum(gainSel & (postTuning.tuningPeak < mean([targIdx foilIdx]) )  );
-    peak.noPre.closeF = sum(gainSel & (postTuning.tuningPeak > mean([targIdx foilIdx]) )  );
+    peak.noPre.closeT = sum(gainSel & (postTuning.tuningPeak > mean([targIdx foilIdx]) )  );
+    peak.noPre.closeF = sum(gainSel & (postTuning.tuningPeak < mean([targIdx foilIdx]) )  );
 
 end
 peak.tPre.lose = sum(tPre & loseSel);
@@ -294,7 +279,7 @@ projPost = projectCoordPlaneTone(postTuning.tuningPeak, responsiveFlagPre, roiCe
 cmap = jet;
 cmap = cmap(colormapIndex,:);
 [toneStat, allCounts] = plotTonotopyProj({projPre,projPost}, {peakSignifPre,peakSignifPost},...
-    allToneIdx,[targIdx, foilIdx],cmap,false,3);
+    allToneIdx,cmap,false,4);
 saveas(gcf,[savePath mouse '\tonotopy\f2_tonotopyLine.png']);
 %% plot1.7: quantify the shift of peak tones by the spread of the distribution
 [f1, targWidth, foilWidth] = plotTonotopyProjChange(toneStat,{peakSignifPre,peakSignifPost},tones,targIdx,foilIdx);
@@ -389,7 +374,7 @@ prepostTuning.decode.cellWPost = cellWPost;
 totalDecode = (signifFlagPre|signifFlagPost);
 gainDecode = totalDecode & ~signifFlagPre;
 loseDecode = totalDecode & ~signifFlagPost;
-stayDecode = (signifFlagPre&signifFlagPost);
+stayDecode = decodeFlag;
 func_piePlot({{gainDecode,loseDecode,stayDecode, ~totalDecode}}, ...
     {{'gain','lose','stay','not decoding'}},{'# of decoding neurons'});
 saveas(gcf,[savePath mouse '\tfDecode\f0_gainLose.png']);
@@ -525,8 +510,8 @@ for i = 1:1000
     shufDataAbs = [shufDataAbs;abs(tempPre)-abs(tempPost)];
     shufDataPre = [shufDataPre;tempPre];
 end
-downFlag = cellPrePost > mean(shufData)+std(shufData)*2;
-upFlag = cellPrePost < mean(shufData)-std(shufData)*2;
+downFlag = cellPrePost > std(shufData)*2;
+upFlag = cellPrePost < -std(shufData)*2;
 
 tChange.up = sum(tFlagPre&upFlag);
 tChange.down = sum(tFlagPre&downFlag);
@@ -553,26 +538,31 @@ decoder.nDecode = sum(decodeFlag);
 
 %% plot4.9: change in absolute decoder weight based on their initial decoding weight
 
-downFlagAbs = cellPrePostAbs > mean(shufDataAbs)+std(shufDataAbs)*2;
-upFlagAbs = cellPrePostAbs < mean(shufDataAbs)-std(shufDataAbs)*2;
+downFlagAbs = cellPrePostAbs > std(shufDataAbs)*2;
+upFlagAbs = cellPrePostAbs < -std(shufDataAbs)*2;
 
-tChangeAbs.up = sum(tFlagPre&upFlagAbs);
-tChangeAbs.down = sum(tFlagPre&downFlagAbs);
-tChangeAbs.stay = sum(tFlagPre&(~upFlagAbs & ~downFlagAbs));
-decoder.tChangeAbs = tChangeAbs;
+tChange.up = sum(tFlagPre&upFlag);
+tChange.down = sum(tFlagPre&downFlag);
+tChange.stay = sum(tFlagPre&(~upFlag & ~downFlag));
+tChange.downSwitch = sum(tFlagPre&downFlag&fFlagPost);
+decoder.tChange = tChange;
 
-fChangeAbs.up = sum(fFlagPre&upFlagAbs);
-fChangeAbs.down = sum(fFlagPre&downFlagAbs);
-fChangeAbs.stay = sum(fFlagPre&(~upFlagAbs & ~downFlagAbs));
-decoder.fChangeAbs = fChangeAbs;
+fChange.up = sum(fFlagPre&upFlag);
+fChange.down = sum(fFlagPre&downFlag);
+fChange.stay = sum(fFlagPre&(~upFlag & ~downFlag));
+fChange.upSwitch = sum(fFlagPre&upFlag&tFlagPost);
+decoder.fChange = fChange;
 
-nChangeAbs.up = sum((~tFlagPre & ~fFlagPre)&upFlagAbs);
-nChangeAbs.down =  sum((~tFlagPre & ~fFlagPre)&downFlagAbs);
-nChangeAbs.stay = sum((~tFlagPre & ~fFlagPre)&(~upFlagAbs & ~downFlagAbs));
+nChange.up = sum((~tFlagPre & ~fFlagPre)&upFlag);
+nChange.down =  sum((~tFlagPre & ~fFlagPre)&downFlag);
+nChange.stay = sum((~tFlagPre & ~fFlagPre)&(~upFlag & ~downFlag));
 
-nChangeAbs.upT =  sum((~tFlagPre & ~fFlagPre)&upFlagAbs&tFlagPost);
-nChangeAbs.upF = sum((~tFlagPre & ~fFlagPre)&upFlagAbs&fFlagPost);
-decoder.nChangeAbs = nChangeAbs;
+nChange.upT =  sum((~tFlagPre & ~fFlagPre)&upFlag&tFlagPost);
+nChange.upF = sum((~tFlagPre & ~fFlagPre)&upFlag&fFlagPost);
+nChange.downT = sum((~tFlagPre & ~fFlagPre)&downFlag&tFlagPost);
+nChange.downF = sum((~tFlagPre & ~fFlagPre)&downFlag&fFlagPost);
+decoder.nChange = nChange;
+decoder.nDecode = sum(decodeFlag);
 
 save([savePath mouse '_prePostTuning.mat']);
 
@@ -776,7 +766,7 @@ function proj = projectCoordPlaneTone(peak, responsiveFlag, roiCentroid,linePos,
     end
 end
 
-function [toneStat,allCounts] = plotTonotopyProj(proj,peakSignif,allToneIdx,behavToneIdx,cmap,normalized,smoothWindow )
+function [toneStat,allCounts] = plotTonotopyProj(proj,peakSignif,allToneIdx,cmap,normalized,smoothWindow)
     if nargin == 6
         smoothWindow = 1;
     end
@@ -793,8 +783,8 @@ function [toneStat,allCounts] = plotTonotopyProj(proj,peakSignif,allToneIdx,beha
             end
         end
     end
-    edgeMax = max(temp); edgeMax = (ceil(edgeMax/100)+1)*100;
-    edgeMin = min(temp); edgeMin = (floor(edgeMin/100)-1)*100;
+    edgeMax = max(temp); edgeMax = ceil(edgeMax/100)*100;
+    edgeMin = min(temp); edgeMin = floor(edgeMin/100)*100;
     edges = edgeMin:50:edgeMax;
     for i = 1:nData     
         for j = 1:nPlanes
@@ -805,18 +795,13 @@ function [toneStat,allCounts] = plotTonotopyProj(proj,peakSignif,allToneIdx,beha
             for k = 1:nTones
                 toneTemp = temp{k};
                 toneID = find(peakSignif{i}{j}(k)==allToneIdx);
-                if any(toneID == behavToneIdx)
-                    linewid = 3;
-                else
-                    linewid = 1;
-                end
                 [counts,~] = histcounts(toneTemp,edges);
                 allCounts{i}{j}(:,k) = counts;
                 if normalized
                     counts = counts / sum(counts);
                 end
                 edgeMed = edges(1:end-1)/2 + edges(2:end)/2;
-                plot(edgeMed, smoothdata(counts,'gaussian',smoothWindow),'Color',cmap(toneID,:),'LineWidth',linewid);
+                plot(edgeMed, smoothdata(counts,'gaussian',smoothWindow),'Color',cmap(toneID,:),'LineWidth',2);
                 toneStat{i}{j}(k,1) = median(toneTemp);
                 toneStat{i}{j}(k,2) = prctile(toneTemp,75) - prctile(toneTemp,25);
                 toneStat{i}{j}(k,3) = length(toneTemp);
