@@ -1,6 +1,6 @@
 %% load data
 clear; 
-mouse = 'cd044';
+mouse = 'cd036';
 switch mouse
     case 'cd017'
         preName = 'cd017_000_001';
@@ -425,6 +425,41 @@ temp = preTuning.tuningPeak(respCellFlag); prePeak = temp(signifFlagPre);
 temp = postTuning.tuningPeak(respCellFlag); postPeak = temp(signifFlagPost);
 func_histPlot({{prePeak, postPeak}},{{'pre','post'}},{'peak'},{[0 17]});
 saveas(gcf,[savePath mouse '\tfDecode\f4_wPeak.png']);
+
+%% plot4.5: plot map of accuracy and change in accuracy
+tempPre = mean(decoderPre.cellAcc(signifFlagPre,:,2),2)-0.5;
+tempPost = mean(decoderPost.cellAcc(signifFlagPost,:,2),2)-0.5;
+tempMax = prctile([tempPre;tempPost],90); tempMin = prctile([tempPre;tempPost],10);
+
+accIdxPre = normalizeIndex(tempPre, tempMax, tempMin);
+accIdxPost = normalizeIndex(tempPost, tempMax, tempMin);
+
+tempidx = find(respCellFlag); tempidx = tempidx(signifFlagPre);
+preFlag = zeros(1,nNeuron);preFlag(tempidx) = 1;
+preIdx = zeros(1,nNeuron);preIdx(tempidx) = accIdxPre;
+tempidx = find(respCellFlag); tempidx = tempidx(signifFlagPost);
+postFlag = zeros(1,nNeuron);postFlag(tempidx) = 1;
+postIdx = zeros(1,nNeuron);postIdx(tempidx) = accIdxPost;
+
+plotMapIdx(img, rois, neuronEachPlane,rbmap,1:256,{preIdx postIdx},...
+    {preFlag, postFlag});
+suptitle('map of accuracy')
+
+% change in decoder accuracy
+tempPre = mean(decoderPre.cellAcc(decodeFlag,:,2),2);
+tempPost = mean(decoderPost.cellAcc(decodeFlag,:,2),2);
+tempChange = tempPre - tempPost;
+tempMax = prctile(tempChange,90); tempMin = prctile(tempChange,10);
+
+accIdxChange = normalizeIndex(tempChange, tempMax, tempMin);
+
+tempidx = find(respCellFlag); tempidx = tempidx(decodeFlag);
+preFlag = zeros(1,nNeuron);preFlag(tempidx) = 1;
+changeIdx = zeros(1,nNeuron);changeIdx(tempidx) = accIdxChange;
+
+plotMapIdx(img, rois, neuronEachPlane,rbmap,1:256,{changeIdx},...
+    {preFlag, postFlag});
+suptitle('map of cahnge in accuracy')
 
 %% plot4.5: visualize absolute decoder weight 
 tempMax = prctile(abs([cellWPre;cellWPost]),90); tempMin = 0;
