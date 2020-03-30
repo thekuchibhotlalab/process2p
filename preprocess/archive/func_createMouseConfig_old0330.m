@@ -1,7 +1,10 @@
-function T = func_createMouseConfig(mouse, varargin)
+function T = func_createMouseConfig(mouse, h5path,sbxpath, varargin)
 
 p = func_createInputParser();
 p.parse(varargin{:});
+p.addParameter('roiFile', ['roi\' mouse '_roi0.zip roi\' mouse '_roi1.mat'])
+p.addParameter('tcFile', ['TC\' mouse '_TC_plane0.mat TC\' mouse '_TC_plane1.mat'])
+p.addParameter('spikeFile', ['TC\' mouse '_spike_plane0.mat TC\' mouse '_spike_plane1.mat'])
 
 sep = p.Results.sep;
 savepath = p.Results.savepath;
@@ -13,6 +16,8 @@ roiFile = p.Results.roiFile;
 tcFile = p.Results.tcFile;
 behavpath = p.Results.behavpath;
 spikeFile = p.Results.spikeFile;
+
+filename = p.Results.filename;
 
 cd(h5path);
 files = dir('*.h5');
@@ -74,7 +79,7 @@ for i = 1:length(uniqueDays)
         temp = {0, 0, 0, 0, 0, 0};
         if uniqueDays(i) == 0 % for day 0, tuning
             if sessions{i}(j) == 1
-                T(count,1:11) = {str2double(tempSplit{2}), sessions{i}(j),  'Tuning PuretoneBef',names{count}, '', temp{:}};
+                T(count,1:11) = {str2double(tempSplit{2}), sessions{i}(j),  'Tuning PuretoneBef',names{count}, '', temp{:}}
                 %tempLine = ['Day ' str2double(str2double(tempSplit{2})) ' Session ' sessions{i}(j) ' Imaging ' names{count} ' Tuning PuretoneBef'];
             elseif sessions{i}(j) >= 2
                 T(count,1:11) = {str2double(tempSplit{2}), sessions{i}(j),  'Tuning WhiteNoiseBef',names{count}, '', temp{:}};
@@ -125,9 +130,11 @@ end
 T = cell2table(T);
 T.Properties.VariableNames = {'Day','Session','BehavType','ImagingFile',...
     'BehavFile','Alignment', 'ROI', 'TC', 'Neuropil', 'dff', 'Deconvolution',...
-    'nFrames_oneplane','datapath','suite2ppath','h5path','sbxpath',...
-    'behavpath','roiFile','tcFile', 'spikeFile'};
+    'nFrames_oneplane'};
 %fclose(fileID);
 writetable(T,[savepath sep mouse '_config.csv']);
+
+    
+    
 
 end
