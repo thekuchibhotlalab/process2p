@@ -188,7 +188,7 @@ margins = [0.02 0.002];
 %for i=1:nPlanes
 i = planeToDo;
 global tempIsCell
-global tempHealthy
+global tempFilled
 global roi_redrawn
 global tempRoiCoord
 global origRoiCoord
@@ -211,11 +211,11 @@ else
     end
 end
 
-if ~exist([roipath sep 'healthy_plane' num2str(i-1) '.mat'],'file')
-    healthy = nan(nCells,nDays);
+if ~exist([roipath sep 'filled_plane' num2str(i-1) '.mat'],'file')
+    filled = nan(nCells,nDays);
 else
-    healthy = load([roipath sep  'healthy_plane' num2str(i-1) '.mat']);
-    healthy = healthy.healthy; 
+    filled = load([roipath sep  'filled_plane' num2str(i-1) '.mat']);
+    filled = filled.filled; 
 end
 
 if ~exist([roipath sep 'roi_redrawn_plane' num2str(i-1) '.mat'],'file')
@@ -333,7 +333,7 @@ for j=c:nCells
         subplot_day{k} = subplot_tight(4,nCol,nCol*4-nCol*2+k,margins);      
         % Try new contrast adjustment method
         hold on;
-        extraMargin = 20;
+        extraMargin = 25;
         if (ylimm(1)-extraMargin) < 1  || (xlimm(1)-extraMargin) < 1 ||...
                 (ylimm(2)+extraMargin)> size(avg_day{k},1) || (xlimm(2)+extraMargin) > size(avg_day{k},2)
             extraMargin = min([ylimm(1), xlimm(1) size(avg_day{k},1)-ylimm(2)   size(avg_day{k},2)-xlimm(1)])-1;
@@ -374,7 +374,7 @@ for j=c:nCells
     end
     cpanel = uicontrol(f_selection,'Style','text');
     set(cpanel,'Units', 'normalized','Position',[startLoc barHPos(end) leng itemH])
-    cpanel.String = 'health';
+    cpanel.String = 'filled';
     
     cpanel = uicontrol(f_selection,'Style','pushbutton','CallBack',{@quit_callback,f_selection});
     set(cpanel,'Units', 'normalized','Position',[startLoc buttonHPos leng itemH])
@@ -467,7 +467,7 @@ for j=c:nCells
     end
     %pause(2);
     ishere(j,:) = tempIsCell;
-    healthy(j,:) = tempHealthy;
+    filled(j,:) = tempFilled;
     for d = 1:nDays
         roi_redrawn(j,d,:) = tempRoiCoord(d,:);
     end
@@ -504,7 +504,7 @@ for j=c:nCells
 
     % Save indiv plane
     save([roipath sep 'ishere_plane' num2str(i-1) '.mat'],'ishere');
-    save([roipath sep 'filled_plane' num2str(i-1) '.mat'],'healthy');
+    save([roipath sep 'filled_plane' num2str(i-1) '.mat'],'filled');
     save([roipath sep 'roi_redrawn_plane' num2str(i-1) '.mat'],'roi_redrawn');
 end
 end
@@ -527,16 +527,16 @@ end
 
 function  continue_callback(hObject,eventdata,f_selection, edit_box,overexp_box)
     global tempIsCell
-    global tempHealthy
+    global tempFilled
     tempIsCell = [];
-    tempHealthy =[];
+    tempFilled =[];
     for i = 1:length(edit_box)
         tempStr = get(edit_box{i}, 'String');
         tempIsCell(i) = str2double(tempStr);
     end
     for i = 1:length(overexp_box)
         tempStr = get(overexp_box{i}, 'String');
-        tempHealthy(i) = str2double(tempStr);
+        tempFilled(i) = str2double(tempStr);
     end
     close(f_selection)
 end

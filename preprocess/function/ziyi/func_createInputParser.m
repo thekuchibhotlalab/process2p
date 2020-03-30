@@ -4,7 +4,6 @@ function p = func_createInputParser()
 % Syntax: output = myFun(input)
 %
 % Long description
-    
 
 p = inputParser;
 p.KeepUnmatched = true;
