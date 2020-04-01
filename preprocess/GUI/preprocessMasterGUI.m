@@ -219,6 +219,8 @@ function preprocessPreviewButton_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 %---------GET PARAMETERS SHARED BY ALL FUNCTIONS, IMAGING AND MOUSE CONFIG-----------
 configTable = getConfigTable(handles);
+configTable = func_fillMissingTable(configTable);
+
 imagingConfigDisplay = func_loadImagingConfig(handles.imagingConfigName,'Split', false);
 imagingConfig = func_loadImagingConfig(handles.imagingConfigName,'Split', true);
 paramValueDisplay = {};
@@ -242,7 +244,7 @@ currStr = allStr{get(handles.preprocessMenu,'Value')};
 
 % get the filename selected, and the table of information
 filenames = get(handles.listbox1,'String');if ~iscell(filenames);filenames = {filenames};end
-configTable = getConfigTable(handles);
+
 paramValue = [paramValue;'filename';strjoin(filenames)];
 % get all the path and files needed 
 sbxpath = configTable.sbxpath(strcmp(configTable.ImagingFile,filenames));
