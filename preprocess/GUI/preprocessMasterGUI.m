@@ -330,11 +330,13 @@ switch currStr
         %datapath = configTable.datapath(strcmp(configTable.ImagingFile,filenames));
         %roiFile = configTable.roiFile(strcmp(configTable.ImagingFile,filenames));
         % check if all files have the same path and roi
-        if ~(isequal(sbxpath{:}) && isequal(h5path{:}) && isequal(suite2ppath{:}) && isequal(datapath{:}))
-            disp('ERROR: Not all files have same path!')
-        end
-        if ~isequal(roiFile{:})
-            disp('ERROR: Not all files have same roi!')
+        if length(filenames) ~= 1
+            if ~(isequal(sbxpath{:}) && isequal(h5path{:}) && isequal(suite2ppath{:}) && isequal(datapath{:}))
+                disp('ERROR: Not all files have same path!')
+            end
+            if ~isequal(roiFile{:})
+                disp('ERROR: Not all files have same roi!')
+            end
         end
         % add path into parameters
         %param = [param;'sbxpath';'h5path';'suite2ppath';'root';'savepath'];
