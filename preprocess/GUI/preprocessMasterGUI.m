@@ -181,6 +181,8 @@ switch selectedOpt
         filenames = configTable.('ImagingFile');
     case 'ROI Tracking'
         filenames = configTable.('ImagingFile');
+    case 'ROI Revision'
+        filenames = configTable.('ImagingFile');
     case 'Tuning Curve'
         filenames = 'SelectFile';
     case 'None'
@@ -387,6 +389,26 @@ switch currStr
         %    datapath{1};behavpath{1}];
         % add filename into the parameter
         %paramValue = [paramValue;'filename';strjoin(filenames);'roiFile';roiFile{1};'tcFile';tcFile{1}];
+        % add nframes oneplane into parameter
+        findIndex = @(x)find(strcmp(configTable.ImagingFile,x));
+        nFrames_oneplaneStr = configTable.nFrames_oneplane(cellfun(findIndex,filenames));
+        if ~iscell(nFrames_oneplaneStr); nFrames_oneplaneStr = {nFrames_oneplaneStr}; end
+        for i = 1:length(nFrames_oneplaneStr)
+            nFrames_oneplaneSplit = strsplit(nFrames_oneplaneStr{i});
+            for j = 1:str2double(imagingConfig.nPlanes)
+                nFrames_oneplane(i,j) = str2double(nFrames_oneplaneSplit{j});
+            end
+        end
+        paramValue = [paramValue;'nFrames_oneplane';nFrames_oneplane];
+        
+    case 'ROI Revision'
+        % check if all files have the same path and roi
+        if ~(isequal(sbxpath{:}) && isequal(h5path{:}) && isequal(suite2ppath{:}) && isequal(datapath{:}) && isequal(behavpath{:}))
+            disp('ERROR: Not all files have same path!')
+        end
+        if ~(isequal(roiFile{:}) && isequal(tcFile{:}))
+            disp('ERROR: Not all files have same roi or TC!')
+        end       
         % add nframes oneplane into parameter
         findIndex = @(x)find(strcmp(configTable.ImagingFile,x));
         nFrames_oneplaneStr = configTable.nFrames_oneplane(cellfun(findIndex,filenames));
@@ -626,6 +648,8 @@ case 'Save MeanImg'
     getMeanImg(handles.param{:});
 case 'ROI Tracking'
     roiTracking(handles.param{:});
+case 'ROI Revision'
+    roiRevision(handles.param{:});
 end
 
 % --- Executes on button press in preprocessParamEditButton.

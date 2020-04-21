@@ -47,6 +47,10 @@ TONEF = 12;
 CONTEXT=13;
 sep = '\';
 warning('off');
+
+nFrames_add = sum(nFrames_oneplane(2:end,:),2);
+nFrames = diff([0;nFrames_add]);
+
 if nFuncChannel == 1
     prompt = {'Enter Plane (1/2):'};
     dlgtitle = 'Input';
@@ -81,6 +85,8 @@ mkdir([roipath sep 'checkCell' sep]);
 imgData = func_loadMouseConfig(mouse,'root',rootpath);
 allDay = unique(imgData.Day);
 behavDay = unique(imgData.Day(strcmp(imgData.BehavType,'Behavior')));
+tuningDayIdx = cellfun(@(x)any(x==behavDay), num2cell(allDay));
+tuningDay = allDay(~tuningDayIdx);
 
 nDays = length(allDay);
 avg_day = cell(nDays,1);
@@ -135,8 +141,8 @@ for i = 1:length(behavDay)
             target_frames(~mod(target_frames,2))/nPlanes];
 
         %if ~(j==1 && i==1)
-        foilFramePlane = foilFramePlane+repelem(nFrames_oneplane(sessionIdx_thisday(j),:),nFoil,1);
-        targetFramePlane = targetFramePlane+repelem(nFrames_oneplane(sessionIdx_thisday(j),:),nTarget,1);
+        foilFramePlane = foilFramePlane+repelem(nFrames_oneplane(sessionIdx_thisday_behav(j),:),nFoil,1);
+        targetFramePlane = targetFramePlane+repelem(nFrames_oneplane(sessionIdx_thisday_behav(j),:),nTarget,1);
         %end
         foil_fr = [foil_fr;foilFramePlane];
         target_fr = [target_fr;targetFramePlane];
@@ -144,6 +150,49 @@ for i = 1:length(behavDay)
     %list_b{i} = sessionIdx_thisday_behav;
     %list_f{i} = sessionIdx_thisday;
 end
+
+toneorder = [45255 8000 13454 4757 5657,...
+    22627 64000 53817 4000 9514,...
+    16000 6727 19027 26909 32000,...
+    11314 38055];
+
+
+for i=1:length(tuningDay)
+    this_day = tuningDay(i);
+    sessionIdx_thisday_tuning = find(imgData.Day == this_day & (nFrames==16999) );
+    sessionIdx_thisday = find(imgData.Day==this_day);
+    for j = 1:length(sessionIdx_thisday_tuning)
+        targIdx = find(target==toneorder);
+        foilIdx = find(foil==toneorder);
+        
+        foil_frames = ((1700:1700:16999) + (foilIdx-1)*100)';
+        target_frames = ((1700:1700:16999) + (targIdx-1)*100)';
+        nFoil = size(foil_frames,1);
+        nTarget = size(target_frames,1);
+        
+        foilFramePlane = [foil_frames foil_frames];
+        foilFramePlane(logical(mod(foil_frames,2)),:) = [round(foil_frames(logical(mod(foil_frames,2)))/nPlanes) ...
+            round(foil_frames(logical(mod(foil_frames,2)))/nPlanes)-1];
+        foilFramePlane(~mod(foil_frames,2),:) = [foil_frames(~mod(foil_frames,2))/nPlanes ...
+            foil_frames(~mod(foil_frames,2))/nPlanes];
+
+        targetFramePlane = [target_frames target_frames];
+        targetFramePlane(logical(mod(target_frames,2)),:) = [round(target_frames(logical(mod(target_frames,2)))/nPlanes) ...
+            round(target_frames(logical(mod(target_frames,2)))/nPlanes)-1];
+        targetFramePlane(~mod(target_frames,2),:) = [target_frames(~mod(target_frames,2))/nPlanes ...
+            target_frames(~mod(target_frames,2))/nPlanes];
+
+        %if ~(j==1 && i==1)
+        foilFramePlane = foilFramePlane+repelem(nFrames_oneplane(sessionIdx_thisday_tuning(j),:),nFoil,1);
+        targetFramePlane = targetFramePlane+repelem(nFrames_oneplane(sessionIdx_thisday_tuning(j),:),nTarget,1);
+        %end
+        foil_fr = [foil_fr;foilFramePlane];
+        target_fr = [target_fr;targetFramePlane];
+    
+    end
+    
+end
+
 start_foil = foil_fr - round(pretone*acq); % - pretone sec before tone onset
 start_target = target_fr - round(pretone*acq); 
 nframes_psth = round(pretone*acq) + round(posttone*acq); 
@@ -165,8 +214,7 @@ for j=1:nFiles
         (submat-median(submat,2))./median(submat,2);%./repmat(max(submat,[],2)-min(submat,[],2),1,size(submat,2));
 end
 
-nFrames_add = sum(nFrames_oneplane(2:end,:),2);
-nFrames = diff([0;nFrames_add]);
+
 baseline = ismember(nFrames,9999);
 tuningsessions = ismember(nFrames,[4999;16999]);
 behavsessions = (~baseline) & (~tuningsessions);
@@ -244,7 +292,6 @@ whichsessions_target = sum(tempTarget,1);
 %%    
 for j=c:nCells  
     disp(['cell #' int2str(j)])
-    tic;
     tempCoord = [rois{1,j}.mnCoordinates(:,1),rois{1,j}.mnCoordinates(:,2)];
     bw = roipoly(zeros(data.ops.Lx,data.ops.Ly),rois{1,j}.mnCoordinates(:,2),rois{1,j}.mnCoordinates(:,1));
     [xt,yt] = find(bw==1);
@@ -256,10 +303,10 @@ for j=c:nCells
     currentCopy = [];
     
     figdays = figure;         
-    set(gcf, 'Units', 'Normalized', 'OuterPosition', [0.15, 0.04, 0.85, 0.96]);% Enlarge figure to full screen.
+    set(gcf, 'Units', 'Normalized', 'OuterPosition', [0.17, 0.04, 0.83, 0.96]);% Enlarge figure to full screen.
 
     % Plot norm traces
-    subplot_tight(4,1,1,margins);hold on;title(['Cell ' num2str(j) ', raw traces']);
+    subplot_tight(5,1,1,margins);hold on;title(['Cell ' num2str(j) ', raw traces']);
     plot(zfluo(j,:));        
     for k=1:nBaseline
         plot(intervals_baseline{i}(k,1)+1:intervals_baseline{i}(k,2),zfluo(j,intervals_baseline{i}(k,1)+1:intervals_baseline{i}(k,2)),'g');% color the baseline traces
@@ -271,14 +318,14 @@ for j=c:nCells
     xlim([0 size(zfluo(j,:),2)]);
     for k=1:nTuning
         plot(intervals_tc{i}(k,1)+1:intervals_tc{i}(k,2),zfluo(j,intervals_tc{i}(k,1)+1:intervals_tc{i}(k,2)),'color',[0.8 0.8 0.8]);
-    end        
+    end   
 
     % Plot tone-evoked resp
     for k=1:nDays
-        if ~ismember(allDay(k),behavDay), continue, end
+        %if ~ismember(allDay(k),behavDay), continue, end
         %subplot_tight(4,nDays*2,nDays*2+allDay(k)*2+1,margins);hold on;
-        subplot_tight(4,nDays,nDays+allDay(k)+1,margins);hold on;
-        
+        %subplot_tight(4,nDays,nDays+allDay(k)+1,margins);hold on;
+        subplot_tight(5,nDays+2,nDays+2+allDay(k)+1,margins);hold on;
         ok_foil = ismember(whichsessions_foil,list_f{k});
         l = sum(ok_foil);
         matidx = repelem(0:nframes_psth-1,l,1);
@@ -294,16 +341,35 @@ for j=c:nCells
         traces_target = reshape(m_target,nframes_psth,l);
         
         %plot(traces_foil,'color',[0.8 0.8 0.8]);plot(mean(traces_foil,2),'k','linewidth',2);
-        plot(traces_foil,'color',[0.8 0.8 0.8]);
-        plot(traces_target,'color',[0.8 0.8 0.8]);
+        %plot(traces_foil,'color',[0.8 0.8 0.8]);
+        %plot(traces_target,'color',[0.8 0.8 0.8]);
+        targSEM = std(traces_target,0,2) ./ sqrt(size(traces_target,2));
+        signalPlusSem = mean(traces_target,2) + targSEM;signalMinusSem = mean(traces_target,2) - targSEM;
+        signalContour = [signalPlusSem;flip(signalMinusSem)];
+        timePointsContour = [1:size(traces_target,1) flip(1:size(traces_target,1))];
+        fill(timePointsContour,signalContour,[0.3 1 0.3], 'faceAlpha',0.3, 'edgeColor', 'None')
+        foilSEM = std(traces_foil,0,2) ./ sqrt(size(traces_foil,2));
+        signalPlusSem = mean(traces_foil,2) + foilSEM;signalMinusSem = mean(traces_foil,2) - foilSEM;
+        signalContour = [signalPlusSem;flip(signalMinusSem)];
+        timePointsContour = [1:size(traces_foil,1) flip(1:size(traces_foil,1))];
+        fill(timePointsContour,signalContour,[1 0.3 0.3], 'faceAlpha',0.3, 'edgeColor', 'None')
+        
+        
         plot(mean(traces_target,2),'g','linewidth',2);
         plot(mean(traces_foil,2),'r','linewidth',2);
         title(['D' num2str(k)]);
-        if allDay(k)==behavDay(1), ylimm1 = ylim; else, ylim(ylimm1); end
+        %if allDay(k)==behavDay(1), ylimm1 = ylim; else, ylim(ylimm1); end
+        if k==1
+            ylimm1 = ylim; ydiff = ylimm1(2)-ylimm1(1); 
+            ylimm1(2) = ylimm1(2) + ydiff*0.7; ylimm1(1) = ylimm1(1) - ydiff*0.7;
+            ylim(ylimm1)
+        else, ylim(ylimm1); 
+        end
         %PlotHVLines(pretone*round(acq),'v','color','r','linewidth',1);
         PlotHVLines(pretone*round(acq),'v','color',[0 0 0],'linewidth',1);
-        if k>1, axis off; end
+        %if k>1, axis off; end
         %ylim(ylimm1);
+        axis off
         title(['D' num2str(k)]);
         %axis off;
         %subplot_tight(4,nDays*2,nDays*2+allDay(k)*2+2,margins);hold on;
@@ -321,9 +387,10 @@ for j=c:nCells
     croi = [mean(minmax(xroi')) mean(minmax(yroi'))]; % croi of size 403*697
     ylimm = [croi(1)-20 croi(1)+20]; %ylimm should be from 1-403
     xlimm = [croi(2)-20 croi(2)+20]; %xlim should be 1-697
-    nCol = ceil(nDays/2);
+    %nCol = ceil(nDays/2);
+    nCol = ceil(nDays/2+1);
     % plot it first on the mean img, then across days
-    subplot_tight(4,nCol,nCol*4-nCol*2,margins); hold on; 
+    subplot_tight(5,nCol,nCol*4-nCol*2,margins); hold on; 
     imagesc(data.ops.meanImgE);
     patch(yroi,xroi,'g','FaceColor','none');
     plot(round(croi(2)),round(croi(1)),'r+');
@@ -332,20 +399,22 @@ for j=c:nCells
     localImgList = {};
     marginFlag = 0;
     subplot_day = cell(1,nDays);
+    nCol = ceil(nDays/3);
     for k=1:nDays
         if isempty(avg_day{k}), continue;end
-        subplot_day{k} = subplot_tight(4,nCol,nCol*4-nCol*2+k,margins);      
+        subplot_day{k} = subplot_tight(5,nCol,nCol*4-nCol*2+k,margins);      
         % Try new contrast adjustment method
         hold on;
         extraMargin = 20;
         if (ylimm(1)-extraMargin) < 1  || (xlimm(1)-extraMargin) < 1 ||...
                 (ylimm(2)+extraMargin)> size(avg_day{k},1) || (xlimm(2)+extraMargin) > size(avg_day{k},2)
-            extraMargin = min([ylimm(1), xlimm(1) size(avg_day{k},1)-ylimm(2)   size(avg_day{k},2)-xlimm(1)])-1;
+            extraMargin = min([ylimm(1)+1, xlimm(1)+1 size(avg_day{k},1)-ylimm(2)   size(avg_day{k},2)-xlimm(2)]);
             marginFlag = 1;
         end
         localImg = uint16(avg_day{k}(ylimm(1)-extraMargin:ylimm(2)+extraMargin, xlimm(1)-extraMargin:xlimm(2)+extraMargin));
-        localImgList{k} = localImg; % cropped from 
-        imagesc(imadjust(adapthisteq(localImg, 'NBins', 256),[0 1],[0 1],0.2)); 
+        localImgList{k} = imadjust(adapthisteq(localImg, 'NBins', 256)); % cropped from 
+        %imagesc(imadjust(adapthisteq(localImg, 'NBins', 256),[0 1],[0 1],0.2)); 
+        imagesc(localImgList{k}); 
         xlim([extraMargin+1 xlimm(2)-xlimm(1)+extraMargin+1]);ylim([extraMargin+1 ylimm(2)-ylimm(1)+extraMargin+1]);
         axis off;
         title(['D' num2str(k)]);
@@ -358,7 +427,7 @@ for j=c:nCells
     end
     % open the NEW GUI for selecting days and redrawing ROIs
     f_selection = figure; 
-    set(gcf, 'Units', 'Normalized', 'OuterPosition', [0, 0.04, 0.15, 0.96]);
+    set(gcf, 'Units', 'Normalized', 'OuterPosition', [0, 0.04, 0.17, 0.96]);
     figureH = 0.96;
     items = nDays;
     itemH = figureH/(2*items+3);
@@ -484,7 +553,8 @@ for j=c:nCells
     for d = 1:nDays
         subplot_tight(4,tempCol,d,tight_margins)
         hold on;
-        imagesc(imadjust(adapthisteq(localImgList{d}, 'NBins', 256),[0 1],[0 1],0.2)); 
+        %imagesc(imadjust(adapthisteq(localImgList{d}, 'NBins', 256),[0 1],[0 1],0.2)); 
+        imagesc(localImgList{k}); 
         xlim([extraMargin+1 xlimm(2)-xlimm(1)+extraMargin+1]);ylim([extraMargin+1 ylimm(2)-ylimm(1)+extraMargin+1]);
         title(['D' num2str(d)]);
         colormap gray;
@@ -512,7 +582,8 @@ for j=c:nCells
     for d = 1:nDays
         subplot_tight(4,tempCol,d,tight_margins)
         hold on;
-        imagesc(imadjust(adapthisteq(localImgList{d}, 'NBins', 256),[0 1],[0 1],0.2)); 
+        %imagesc(imadjust(adapthisteq(localImgList{d}, 'NBins', 256),[0 1],[0 1],0.2)); 
+        imagesc(localImgList{k}); 
         xlim([extraMargin+1 xlimm(2)-xlimm(1)+extraMargin+1]);ylim([extraMargin+1 ylimm(2)-ylimm(1)+extraMargin+1]);
         title(['D' num2str(d)]);
         colormap gray;
@@ -585,7 +656,8 @@ function redraw_callback(hObject,eventdata,nDay,nCell,imgData)
         croi = imgData{7};
         
         hold on;
-        imagesc(imadjust(adapthisteq(localImg, 'NBins', 256),[0 1],[0 1],0.2)); 
+        %imagesc(imadjust(adapthisteq(localImg, 'NBins', 256),[0 1],[0 1],0.2)); 
+        imagesc(localImg); 
         xlim([extraMargin+1 xlimm(2)-xlimm(1)+extraMargin+1]);ylim([extraMargin+1 ylimm(2)-ylimm(1)+extraMargin+1]);
         pat = patch(yroi-round(xlimm(1)-extraMargin)+1, xroi-round(ylimm(1)-extraMargin)+1, 'g', 'FaceColor','None');
         plot(extraMargin+1+croi(2)-xlimm(1),extraMargin+1+croi(1)-ylimm(1),'r+');
@@ -684,7 +756,8 @@ function previewB_callback(hObject,eventdata,imgData)
     for k = 1:size(tempRoiCoord,1)
         subplot_tight(4,tempCol,k,margins)
         hold on;
-        imagesc(imadjust(adapthisteq(localImgList{k}, 'NBins', 256),[0 1],[0 1],0.2)); 
+        %imagesc(imadjust(adapthisteq(localImgList{k}, 'NBins', 256),[0 1],[0 1],0.2));
+        imagesc(localImgList{k}); 
         xlim([extraMargin+1 xlimm(2)-xlimm(1)+extraMargin+1]);ylim([extraMargin+1 ylimm(2)-ylimm(1)+extraMargin+1]);
         title(['D' num2str(k)]);
         colormap gray;

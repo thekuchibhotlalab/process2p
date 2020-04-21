@@ -1,4 +1,4 @@
-function roiTracking(varargin)
+function roiRevision(varargin)
 %%roiTrackingBin - Description
 %
 % Syntax: output = roiTrackingBin(input)
@@ -47,8 +47,12 @@ TONEF = 12;
 CONTEXT=13;
 sep = '\';
 warning('off');
+
+nFrames_add = sum(nFrames_oneplane(2:end,:),2);
+nFrames = diff([0;nFrames_add]);
+
 if nFuncChannel == 1
-    prompt = {'Enter Plane:'};
+    prompt = {'Enter Plane (1/2):'};
     dlgtitle = 'Input';
     dims = [1 35];
     definput = {'1'};
@@ -57,7 +61,7 @@ if nFuncChannel == 1
     chanToDo = 1;
     avg_session = load([datapath sep 'meanImg' sep mouse '_MeanImgPerSessions_Plane' num2str(planeToDo-1) '.mat']);
 else
-    prompt = {'Enter Plane:','Enter Channel (green/red):'};
+    prompt = {'Enter Plane (1/2):','Enter Channel (green/red):'};
     dlgtitle = 'Input';
     dims = [1 35];
     definput = {'1','green'};
@@ -74,13 +78,24 @@ catch
     disp('MeanImg naming follows old convention');
 end
 
+revisePath = uigetdir();
+if ~exist([revisePath sep 'tempcellnum.mat'],'file')
+    load([revisePath sep 'cellnum.mat'],'cellnum');
+    tempcellnum = cellnum;
+else 
+    load([revisePath sep 'tempcellnum.mat'],'tempcellnum');
+    cellnum = tempcellnum;
+end
+mkdir([revisePath sep 'checkCell' sep]);
+mkdir([revisePath sep 'checkFill' sep]);
+
 roipath = [datapath sep 'roi' sep];
-mkdir(roipath)
-mkdir([roipath sep 'checkCell' sep]);
 
 imgData = func_loadMouseConfig(mouse,'root',rootpath);
 allDay = unique(imgData.Day);
 behavDay = unique(imgData.Day(strcmp(imgData.BehavType,'Behavior')));
+tuningDayIdx = cellfun(@(x)any(x==behavDay), num2cell(allDay));
+tuningDay = allDay(~tuningDayIdx);
 
 nDays = length(allDay);
 avg_day = cell(nDays,1);
@@ -144,6 +159,49 @@ for i = 1:length(behavDay)
     %list_b{i} = sessionIdx_thisday_behav;
     %list_f{i} = sessionIdx_thisday;
 end
+
+toneorder = [45255 8000 13454 4757 5657,...
+    22627 64000 53817 4000 9514,...
+    16000 6727 19027 26909 32000,...
+    11314 38055];
+
+
+for i=1:length(tuningDay)
+    this_day = tuningDay(i);
+    sessionIdx_thisday_tuning = find(imgData.Day == this_day & (nFrames==16999) );
+    sessionIdx_thisday = find(imgData.Day==this_day);
+    for j = 1:length(sessionIdx_thisday_tuning)
+        targIdx = find(target==toneorder);
+        foilIdx = find(foil==toneorder);
+        
+        foil_frames = ((1700:1700:16999) + (foilIdx-1)*100)';
+        target_frames = ((1700:1700:16999) + (targIdx-1)*100)';
+        nFoil = size(foil_frames,1);
+        nTarget = size(target_frames,1);
+        
+        foilFramePlane = [foil_frames foil_frames];
+        foilFramePlane(logical(mod(foil_frames,2)),:) = [round(foil_frames(logical(mod(foil_frames,2)))/nPlanes) ...
+            round(foil_frames(logical(mod(foil_frames,2)))/nPlanes)-1];
+        foilFramePlane(~mod(foil_frames,2),:) = [foil_frames(~mod(foil_frames,2))/nPlanes ...
+            foil_frames(~mod(foil_frames,2))/nPlanes];
+
+        targetFramePlane = [target_frames target_frames];
+        targetFramePlane(logical(mod(target_frames,2)),:) = [round(target_frames(logical(mod(target_frames,2)))/nPlanes) ...
+            round(target_frames(logical(mod(target_frames,2)))/nPlanes)-1];
+        targetFramePlane(~mod(target_frames,2),:) = [target_frames(~mod(target_frames,2))/nPlanes ...
+            target_frames(~mod(target_frames,2))/nPlanes];
+
+        %if ~(j==1 && i==1)
+        foilFramePlane = foilFramePlane+repelem(nFrames_oneplane(sessionIdx_thisday(j),:),nFoil,1);
+        targetFramePlane = targetFramePlane+repelem(nFrames_oneplane(sessionIdx_thisday(j),:),nTarget,1);
+        %end
+        foil_fr = [foil_fr;foilFramePlane];
+        target_fr = [target_fr;targetFramePlane];
+    
+    end
+    
+end
+
 start_foil = foil_fr - round(pretone*acq); % - pretone sec before tone onset
 start_target = target_fr - round(pretone*acq); 
 nframes_psth = round(pretone*acq) + round(posttone*acq); 
@@ -165,8 +223,7 @@ for j=1:nFiles
         (submat-median(submat,2))./median(submat,2);%./repmat(max(submat,[],2)-min(submat,[],2),1,size(submat,2));
 end
 
-nFrames_add = sum(nFrames_oneplane(2:end,:),2);
-nFrames = diff([0;nFrames_add]);
+
 baseline = ismember(nFrames,9999);
 tuningsessions = ismember(nFrames,[4999;16999]);
 behavsessions = (~baseline) & (~tuningsessions);
@@ -199,30 +256,39 @@ global quitFlag
 quitFlag = 0;
 zfluo = squeeze(mat(:,:,2)); % 1D=fluo; 2D=df/f
 nCells = size(zfluo,1);
-if ~exist([roipath sep 'ishere_plane' num2str(i-1) '.mat'],'file')
-    ishere = nan(nCells,nDays);
-    c = 1;
-else
+if ~exist([revisePath sep 'ishere_plane' num2str(i-1) '.mat'],'file')
     ishere = load([roipath sep  'ishere_plane' num2str(i-1) '.mat']);
-    ishere = ishere.ishere;       
-    c = size(ishere(~any(isnan(ishere),2),:),1)+1;
-    if c==0
-        c = 1;
+    ishere = ishere.ishere;
+    disp('Loading Original ishere')
+else
+    ishere = load([revisePath sep  'ishere_plane' num2str(i-1) '.mat']);
+    ishere = ishere.ishere;
+    disp('Loading New ishere')
+end
+
+if ~exist([revisePath sep 'filled_plane' num2str(i-1) '.mat'],'file')
+    if exist([roipath sep 'filled_plane' num2str(i-1) '.mat'],'file')
+        filled = load([roipath sep  'filled_plane' num2str(i-1) '.mat']);
+        filled = filled.filled;
+        disp('Loading Original filled')
+    else
+        filled = nan(nCells,nDays);
+        disp('Creating new filled')
     end
-end
-
-if ~exist([roipath sep 'filled_plane' num2str(i-1) '.mat'],'file')
-    filled = nan(nCells,nDays);
 else
-    filled = load([roipath sep  'filled_plane' num2str(i-1) '.mat']);
+    filled = load([revisePath sep  'filled_plane' num2str(i-1) '.mat']);
     filled = filled.filled; 
+    disp('Loading New filled')
 end
 
-if ~exist([roipath sep 'roi_redrawn_plane' num2str(i-1) '.mat'],'file')
-    roi_redrawn =  cell(nCells,nDays,3);
-else
+if ~exist([revisePath sep 'roi_redrawn_plane' num2str(i-1) '.mat'],'file')
     roi_redrawn = load([roipath sep 'roi_redrawn_plane' num2str(i-1) '.mat']);
     roi_redrawn = roi_redrawn.roi_redrawn;
+    disp('Loading Original roi_redrawn')
+else
+    roi_redrawn = load([revisePath sep 'roi_redrawn_plane' num2str(i-1) '.mat']);
+    roi_redrawn = roi_redrawn.roi_redrawn;
+    disp('Loading New roi_redrawn')
 end
 roiName = [datapath sep roiFile{chanToDo,planeToDo}]; %[mouse '_roi'  int2str(i-1) '.zip'];
 rois = ReadImageJROI(roiName); %read imagej rois
@@ -242,7 +308,7 @@ whichsessions_target = sum(tempTarget,1);
 %[~,whichsessions_target] = InIntervals(start_target(:,i),[nFrames_oneplane(1:end-1,i) nFrames_oneplane(2:end,i)]);
 
 %%    
-for j=c:nCells  
+for j=cellnum 
     disp(['cell #' int2str(j)])
     tic;
     tempCoord = [rois{1,j}.mnCoordinates(:,1),rois{1,j}.mnCoordinates(:,2)];
@@ -275,9 +341,9 @@ for j=c:nCells
 
     % Plot tone-evoked resp
     for k=1:nDays
-        if ~ismember(allDay(k),behavDay), continue, end
+        %if ~ismember(allDay(k),behavDay), continue, end
         %subplot_tight(4,nDays*2,nDays*2+allDay(k)*2+1,margins);hold on;
-        subplot_tight(4,nDays,nDays+allDay(k)+1,margins);hold on;
+        subplot_tight(4,nDays+2,nDays+2+allDay(k)+1,margins);hold on;
         
         ok_foil = ismember(whichsessions_foil,list_f{k});
         l = sum(ok_foil);
@@ -299,11 +365,13 @@ for j=c:nCells
         plot(mean(traces_target,2),'g','linewidth',2);
         plot(mean(traces_foil,2),'r','linewidth',2);
         title(['D' num2str(k)]);
-        if allDay(k)==behavDay(1), ylimm1 = ylim; else, ylim(ylimm1); end
+        %if allDay(k)==behavDay(1), ylimm1 = ylim; else, ylim(ylimm1); end
+        if k==1, ylimm1 = ylim; else, ylim(ylimm1); end
         %PlotHVLines(pretone*round(acq),'v','color','r','linewidth',1);
         PlotHVLines(pretone*round(acq),'v','color',[0 0 0],'linewidth',1);
-        if k>1, axis off; end
+        %if k>1, axis off; end
         %ylim(ylimm1);
+        axis off
         title(['D' num2str(k)]);
         %axis off;
         %subplot_tight(4,nDays*2,nDays*2+allDay(k)*2+2,margins);hold on;
@@ -321,7 +389,7 @@ for j=c:nCells
     croi = [mean(minmax(xroi')) mean(minmax(yroi'))]; % croi of size 403*697
     ylimm = [croi(1)-20 croi(1)+20]; %ylimm should be from 1-403
     xlimm = [croi(2)-20 croi(2)+20]; %xlim should be 1-697
-    nCol = ceil(nDays/2);
+    nCol = ceil(nDays/2+1);
     % plot it first on the mean img, then across days
     subplot_tight(4,nCol,nCol*4-nCol*2,margins); hold on; 
     imagesc(data.ops.meanImgE);
@@ -332,6 +400,7 @@ for j=c:nCells
     localImgList = {};
     marginFlag = 0;
     subplot_day = cell(1,nDays);
+    nCol = ceil(nDays/2);
     for k=1:nDays
         if isempty(avg_day{k}), continue;end
         subplot_day{k} = subplot_tight(4,nCol,nCol*4-nCol*2+k,margins);      
@@ -373,7 +442,7 @@ for j=c:nCells
     for k = 1:length(barHPos)-1
         cpanel = uicontrol(f_selection,'Style','edit'); 
         set(cpanel,'Units', 'normalized','Position',[startLoc barHPos(end-k) leng itemH])
-        cpanel.String = '1';
+        cpanel.String = '0';
         overexp_box{k} = cpanel;
     end
     cpanel = uicontrol(f_selection,'Style','text');
@@ -502,7 +571,7 @@ for j=c:nCells
         end
     end
     %pause(2);
-    saveas(saveFig,[roipath sep 'checkCell' sep 'check_cell_plane' num2str(i-1) 'cell' int2str(j) '.png']);
+    saveas(saveFig,[revisePath sep 'checkCell' sep 'check_cell_plane' num2str(i-1) '_cell' int2str(j) '.png']);
     close(saveFig)
     
     fillFig = figure('visible','off');
@@ -517,26 +586,26 @@ for j=c:nCells
         title(['D' num2str(d)]);
         colormap gray;
         axis off
-        redrawFlag = tempRoiCoord{d,1};
         roixy = tempRoiCoord{d,3};
         pat1 = patch(roixy(:,1)-round(xlimm(1)-extraMargin)+1,roixy(:,2)-round(ylimm(1)-extraMargin)+1,...
             'b','FaceColor','None');
-        if redrawFlag==1
-            pat1.EdgeColor = 'b';
-        elseif  tempIsCell(d)
-            pat1.EdgeColor = 'g';
-        else
+        if tempFilled(d)==1
             pat1.EdgeColor = 'r';
+        else
+            pat1.EdgeColor = 'g';
         end
     end
     %pause(2);
-    saveas(fillFig,[roipath sep 'checkCell' sep 'check_cell_plane' num2str(i-1) 'cell' int2str(j) '.png']);
+    saveas(fillFig,[revisePath sep 'checkFill' sep 'check_fill_plane' num2str(i-1) '_cell' int2str(j) '.png']);
     close(fillFig)
 
     % Save indiv plane
-    save([roipath sep 'ishere_plane' num2str(i-1) '.mat'],'ishere');
-    save([roipath sep 'filled_plane' num2str(i-1) '.mat'],'filled');
-    save([roipath sep 'roi_redrawn_plane' num2str(i-1) '.mat'],'roi_redrawn');
+    save([revisePath sep 'ishere_plane' num2str(i-1) '.mat'],'ishere');
+    save([revisePath sep 'filled_plane' num2str(i-1) '.mat'],'filled');
+    save([revisePath sep 'roi_redrawn_plane' num2str(i-1) '.mat'],'roi_redrawn');
+    
+    tempcellnum(tempcellnum==j) = [];
+    save([revisePath sep 'tempcellnum.mat'],'tempcellnum');
 end
 end
 
