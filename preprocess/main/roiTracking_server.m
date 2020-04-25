@@ -583,7 +583,7 @@ for j=c:nCells
         subplot_tight(4,tempCol,d,tight_margins)
         hold on;
         %imagesc(imadjust(adapthisteq(localImgList{d}, 'NBins', 256),[0 1],[0 1],0.2)); 
-        imagesc(localImgList{d}); 
+        imagesc(localImgList{k}); 
         xlim([extraMargin+1 xlimm(2)-xlimm(1)+extraMargin+1]);ylim([extraMargin+1 ylimm(2)-ylimm(1)+extraMargin+1]);
         title(['D' num2str(d)]);
         colormap gray;
