@@ -8,7 +8,7 @@ p.addParameter('redrawFile', false)
 p.parse(varargin{:});
 sep = '\';
 
-if p.Results.redrawFile
+if ~(p.Results.redrawFile)
     redrawFile = [p.Results.datapath '\roi\roi_redrawn_plane0.mat '...
         p.Results.datapath '\roi\roi_redrawn_plane1.mat'];
 end
@@ -33,7 +33,7 @@ switch p.Results.roiMethod
             end
         end
     case 'manual'
-        if ~p.Results.redrawFile
+        if isempty(p.Results.redrawFile)
             roiFileSplit = strsplit(p.Results.roiFile);
             roiFile = reshape(roiFileSplit,nFuncChannel,nPlanes);
             roisCoord = cell(nFuncChannel,nPlanes);

@@ -1,4 +1,4 @@
-function tcFilename = extractTC(varargin)
+function tcFilename = extractRedrawn(varargin)
 
 p = func_createInputParser();
 p.parse(varargin{:});
@@ -40,7 +40,7 @@ case 'manual'
     data = load([suite2ppath sep 'plane0' sep 'Fall.mat'] );
     ly = data.ops.Ly;
     lx = data.ops.Lx;
-    [roisMask, roisCoord, neuronEachPlane] = func_loadRoi(varargin{:},'xlen',lx,'ylen',ly);
+    [roisMask, roisCoord, neuronEachPlane] = func_loadRoi(varargin{:},'xlen',lx,'ylen',ly,'redrawFile',true);
 case 'suite2p'
     disp('Work in progress!')
 end
@@ -57,14 +57,14 @@ case 'suite2p' % suite2p only support one functional channel!!!
     for i=1:nPlanes 
         tic;
         nFramesPlane = sum(nFrames_oneplane(:,i));
-         
+            
         %check if nb of frames per plane computed is true in suite2p files
         data = load([suite2ppath sep 'plane' num2str(i-1) sep 'Fall.mat'] );
         nFramesPlaneCheck = size(data.F,2);
         if nFramesPlaneCheck==nFramesPlane
-           disp(['Correct nb of frame for plane ' num2str(i) '. Good to go!']);
+            disp(['Correct nb of frame for plane ' num2str(i) '. Good to go!']);
         else
-           error(['Bad nb of frame computed for plane ' num2str(i) ', check it out!']);
+            error(['Bad nb of frame computed for plane ' num2str(i) ', check it out!']);
         end
         for chan = 1:nFuncChannel
             if chan == 1
@@ -74,7 +74,7 @@ case 'suite2p' % suite2p only support one functional channel!!!
             end
             % get roi and preallocate resource
             rois = roisMask{chan,i};
-            nCells = length(rois);
+            nCells = size(rois,2);
             weight= getNeuropilWeight([lx,ly], roisCoord{chan,i}, 'minRadii', 2);
             %preallocate size for TC and neuropil
             TC = nan(nCells, nFramesPlane);
@@ -90,7 +90,7 @@ case 'suite2p' % suite2p only support one functional channel!!!
                     A = reshape(A,lx*ly,[]);
                     for c=1:nCells
                         % get roi and neuropil mask
-                        xyflag = logical(reshape(rois{c},lx*ly,1));
+                        xyflag = logical(reshape(rois{day(j)+1,c},lx*ly,1));
                         weightFlag = reshape((weight{i}>0),lx*ly,1);
                         % extract timecourse
                         neuroPil(c,kall+1:kall+to_read)= mean(A(weightFlag,:),1);
@@ -122,6 +122,7 @@ case 'suite2p' % suite2p only support one functional channel!!!
 case 'sbx' % more than 1 functional channel goes in sbx
     disp('Work in progress!')
 end   
-    
+        
 end
-
+    
+    

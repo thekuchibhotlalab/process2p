@@ -29,5 +29,6 @@ p.addParameter('spikeFile', [])
 p.addParameter('filenameTCFlag', [])
 p.addParameter('filenameTC', [])
 p.addParameter('sep', '\')
+p.addParameter('day', [])
 
 end
