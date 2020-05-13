@@ -28,7 +28,12 @@ p.addParameter('tcFile', [])
 p.addParameter('spikeFile', [])
 p.addParameter('filenameTCFlag', [])
 p.addParameter('filenameTC', [])
-p.addParameter('sep', '\')
 p.addParameter('day', [])
+p.addParameter('xlen', 697)
+p.addParameter('ylen', 403)
+p.addParameter('redrawFile', false)
+p.addParameter('neuropil', 'false')
+p.addParameter('neuropilMethod', 'mean')
+p.addParameter('sep', '\')
 
 end

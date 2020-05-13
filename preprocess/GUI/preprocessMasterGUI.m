@@ -175,7 +175,9 @@ selectedOpt = allOpt{eventdata.Source.Value};
 configTable = getConfigTable(handles);
 
 switch selectedOpt
-    case 'TC extraction'
+    case 'extractTC'
+        filenames = configTable.('ImagingFile');
+    case 'extractRedraw'
         filenames = configTable.('ImagingFile');
     case 'Deconvolve'
         filenames = configTable.('ImagingFile');

@@ -1,4 +1,4 @@
-function tcFilename = extractRedrawn(varargin)
+function tcFilename = extractRedraw(varargin)
 
 p = func_createInputParser();
 p.parse(varargin{:});
@@ -18,8 +18,10 @@ datapath = p.Results.datapath;
 roiFile = p.Results.roiFile;
 nFrames_oneplane = p.Results.nFrames_oneplane;
 day = p.Results.day;
-%nFrames_oneplane = cumsum(nFrames_oneplane);
-%nFrames_oneplane = [zeros(1,nPlanes);nFrames_oneplane];
+
+TCpath = [datapath sep 'TC' sep];
+if exist(TCpath,'dir')==0; mkdir(TCpath); end
+
 %---------CHECK NUMBER OF CHANNELS-----------
 data = load([p.Results.sbxpath sep filenames{1} '.mat']); 
 infosbx = data.info;
@@ -45,6 +47,7 @@ case 'suite2p'
     disp('Work in progress!')
 end
 %---------EXTRACT BASED ON DATA TYPE-----------
+
 tcFilename = cell(nFuncChannel,nPlanes);
 switch p.Results.dataType
 case 'suite2p' % suite2p only support one functional channel!!!
@@ -106,14 +109,14 @@ case 'suite2p' % suite2p only support one functional channel!!!
             % save data. file name are different depending on # of channels
             if nFuncChannel>1
                 
-                save([datapath sep mouse '_TC_plane' num2str(i-1) '_' functionalChannel{chan} '.mat'],'TC','-v7.3');
-                save([datapath sep mouse '_neuroPil_plane' num2str(i-1) '_' functionalChannel{chan} '.mat'],'neuroPil','-v7.3');
-                tcFilename{chan,i} = [mouse '_TC_plane' num2str(i-1) '_' functionalChannel{chan} '.mat'];
+                save([TCpath sep mouse '_TC_plane' num2str(i-1) '_' functionalChannel{chan} '_final.mat'],'TC','-v7.3');
+                save([TCpath sep mouse '_neuroPil_plane' num2str(i-1) '_' functionalChannel{chan} '_final.mat'],'neuroPil','-v7.3');
+                tcFilename{chan,i} = ['TC' sep mouse '_TC_plane' num2str(i-1) '_' functionalChannel{chan} '_final.mat'];
 
             else
-                save([datapath sep mouse '_TC_plane' num2str(i-1) '.mat'],'TC','-v7.3');
-                save([datapath sep mouse '_neuroPil_plane' num2str(i-1) '.mat'],'neuroPil','-v7.3');
-                tcFilename{1,i} = [mouse '_TC_plane' num2str(i-1) '.mat'];
+                save([TCpath sep mouse '_TC_plane' num2str(i-1) '_final.mat'],'TC','-v7.3');
+                save([TCpath sep mouse '_neuroPil_plane' num2str(i-1) '_final.mat'],'neuroPil','-v7.3');
+                tcFilename{1,i} = ['TC' sep mouse '_TC_plane' num2str(i-1) '_final.mat'];
             end
             fclose all;
         end

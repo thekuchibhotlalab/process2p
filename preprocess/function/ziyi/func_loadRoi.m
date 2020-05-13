@@ -1,16 +1,13 @@
 function [roisMask, roisCoord, neuronEachPlane] = func_loadRoi(varargin)
 
 p = func_createInputParser();
-p.addParameter('xlen', 697)
-p.addParameter('ylen', 403)
-p.addParameter('redrawFile', false)
 
 p.parse(varargin{:});
 sep = '\';
 
+% FILENAME OF THE FINAL REVISION OF ROIS
 if p.Results.redrawFile
-    redrawFile = [p.Results.datapath '\roi\roi_redrawn_plane0.mat '...
-        p.Results.datapath '\roi\roi_redrawn_plane1.mat'];
+    redrawFile = 'roi\roi_redrawn_plane0_final.mat roi\roi_redrawn_plane1_final.mat';
 end
 nPlanes = str2double(p.Results.nPlanes);
 [nFuncChannel, functionalChannel, roiType] = func_getFuncChanRoiType(varargin{:});
@@ -70,7 +67,7 @@ switch p.Results.roiMethod
                         % xlen = 697; ylen = 403;
                         tempidx = squeeze(roi_redrawn(k,:,2));% tempimdx has size of 1*day
                         tempCoord = squeeze(roi_redrawn(k,:,3));
-                        roisCoord{i,j}{:,k} = tempCoord;
+                        roisCoord{i,j}(:,k) = tempCoord;
                         for l = 1:size(roi_redrawn,2)
                             tempMask = zeros(xlen, ylen);
                             for m = 1:size(tempidx{l},1)
