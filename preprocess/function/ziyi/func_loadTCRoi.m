@@ -8,6 +8,8 @@ nPlanes = str2double(p.Results.nPlanes);
 
 [nFuncChannel, functionalChannel, roiType] = func_getFuncChanRoiType(varargin{:});
 
+disp('----Loading Timecourse and ROI----')
+tic;
 switch p.Results.roiMethod
     case 'suite2p' % suite2p 
         [suite2pTC, neuronEachPlane, tempRoi] = func_loadTCRoisuite2p(varargin{:});
@@ -48,5 +50,7 @@ switch p.Results.tcMethod
     case 'manual'
         [TC, neuronEachPlane] = func_loadTCmanual(varargin{:});      
 end
+totalTime = toc;
+disp(['Loading Complete. Time = ' num2str(totalTime,'%.2f')]);
 
 end

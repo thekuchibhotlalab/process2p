@@ -22,7 +22,7 @@ function varargout = preprocessMasterGUI(varargin)
 
 % Edit the above text to modify the response to help preprocessMasterGUI
 
-% Last Modified by GUIDE v2.5 03-Jan-2020 10:47:10
+% Last Modified by GUIDE v2.5 04-Jul-2020 13:39:50
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -179,17 +179,19 @@ switch selectedOpt
         filenames = configTable.('ImagingFile');
     case 'extractRedraw'
         filenames = configTable.('ImagingFile');
-    case 'Deconvolve'
+    case 'deconvolve'
         filenames = configTable.('ImagingFile');
-    case 'ROI Tracking'
+    case 'roiTracking'
         filenames = configTable.('ImagingFile');
-    case 'ROI Revision'
+    case 'roiRevision'
         filenames = configTable.('ImagingFile');
-    case 'Tuning Curve'
+    case 'roiRevisionPlot'
+        filenames = configTable.('ImagingFile');
+    case 'getTuning'
         filenames = 'SelectFile';
-    case 'None'
+    case 'none'
         filenames = 'SelectFile';
-    case 'Save MeanImg'
+    case 'saveMeanImg'
         filenames = configTable.('ImagingFile');
 end
 
@@ -225,6 +227,7 @@ function preprocessPreviewButton_Callback(hObject, eventdata, handles)
 configTable = getConfigTable(handles);
 configTable = func_fillMissingTable(configTable);
 
+% add the imaging configuration into parameters
 imagingConfigDisplay = func_loadImagingConfig(handles.imagingConfigName,'Split', false);
 imagingConfig = func_loadImagingConfig(handles.imagingConfigName,'Split', true);
 paramValueDisplay = {};
@@ -248,257 +251,83 @@ currStr = allStr{get(handles.preprocessMenu,'Value')};
 
 % get the filename selected, and the table of information
 filenames = get(handles.listbox1,'String');if ~iscell(filenames);filenames = {filenames};end
-
-paramValue = [paramValue;'filename';strjoin(filenames)];
-% get all the path and files needed 
-sbxpath = configTable.sbxpath(strcmp(configTable.ImagingFile,filenames));
-h5path = configTable.h5path(strcmp(configTable.ImagingFile,filenames));
-suite2ppath = configTable.suite2ppath(strcmp(configTable.ImagingFile,filenames));
-behavpath = configTable.behavpath(strcmp(configTable.ImagingFile,filenames));
-datapath = configTable.datapath(strcmp(configTable.ImagingFile,filenames));
-
-roiFile = configTable.roiFile(strcmp(configTable.ImagingFile,filenames));
-tcFile = configTable.tcFile(strcmp(configTable.ImagingFile,filenames));
-
-% add sbxpath h5path and suite2ppath into the parameter
-param = [param;'sbxpath';'h5path';'suite2ppath';'behavpath';'datapath';'root';'savepath'];
-paramValue = [paramValue;'sbxpath';sbxpath{1};'h5path';h5path{1};'suite2ppath';suite2ppath{1};...
-    'behavpath';behavpath{1};'datapath';datapath{1};'root';handles.configRoot;'savepath'; handles.savePath;...
-    'roiFile';roiFile{1};'tcFile';tcFile{1};'day';{configTable.Day}];
+filenameFlag = strcmp(configTable.ImagingFile,filenames);
 
 
-paramValueDisplay = [paramValueDisplay;sbxpath{1};h5path{1};suite2ppath{1};behavpath{1};...
-    datapath{1};handles.configRoot;handles.savePath];
-% add filename into the parameter
+tcFileSelected = configTable.tcFile(filenameFlag);
+if length(tcFileSelected)>1 && ~isequal(tcFileSelected{:}); disp('ERROR: Selected files does not have same tcFile!'); end
+[~,~,j]=unique(tcFileSelected);
+tcFilenameCommon = tcFileSelected{mode(j)}; % get all tcfile name of selected files
+% get all the imaging files with same tcFile name with selected filenames
+filename_TCFlag = strcmp(configTable.tcFile,tcFilenameCommon);
+% nFrames_oneplane_load is used to load TC file corresponding to selected files 
+nFrames_oneplane_loadStr = configTable.nFrames_oneplane(filename_TCFlag);
+% filename_loadFlag is used to identify where selected files 
+filename_loadFlag = filename_TCFlag; filename_loadFlag(~filenameFlag) = 0; filename_loadFlag = filename_loadFlag(filename_TCFlag);
 
-%param = [param;'sbxpath';'h5path';'suite2ppath';'root';'savepath';'datapath';'behavpath'];
-%paramValue = [paramValue;'sbxpath';sbxpath{1};'h5path';h5path{1};'suite2ppath';suite2ppath{1};...
-%    'root';handles.configRoot; 'savepath'; handles.savePath;'datapath';datapath{1};...
-%    'behavpath';behavpath{1};'roiFile';roiFile{1};'tcFile';tcFile{1}];
-%paramValueDisplay = [paramValueDisplay;sbxpath{1};h5path{1};suite2ppath{1};behavpath{1}; datapath{1};...
-%    handles.configRoot;handles.savePath];
-% add filename into the parameter
+if ~iscell(nFrames_oneplane_loadStr); nFrames_oneplane_loadStr = {nFrames_oneplane_loadStr}; end
+for i = 1:length(nFrames_oneplane_loadStr)
+    nFrames_oneplane_loadStrSplit = strsplit(nFrames_oneplane_loadStr{i});
+    for j = 1:str2double(imagingConfig.nPlanes)
+        nFrames_oneplane_load(i,j) = str2double(nFrames_oneplane_loadStrSplit{j});
+    end
+end
 
 
+
+filename_TC = configTable.ImagingFile(filename_TCFlag);
+paramValue = [paramValue;'filenameTC';strjoin(filename_TC);'filenameTCFlag';filename_loadFlag;'nFrames_oneplane_load';nFrames_oneplane_load];
+
+% save the root and savepath parameters
+param = [param;'root';'savepath'];paramValueDisplay = [paramValueDisplay;handles.configRoot; handles.savePath];
+paramValue = [paramValue;'filename';strjoin(filenames);'root';handles.configRoot;'savepath'; handles.savePath];
+% get all the path and files needed
+varNames = configTable.Properties.VariableNames;
+for i = 1:length(varNames)
+    tempParam = configTable.(varNames{i})(filenameFlag);
+    
+    if strcmp(varNames{i},'nFrames_oneplane')
+        saveParam = [];
+        if ~iscell(tempParam); tempParam = {tempParam}; end
+        for k = 1:length(tempParam)
+            nFrames_oneplaneSplit = strsplit(tempParam{k});
+            for j = 1:str2double(imagingConfig.nPlanes)
+                saveParam(k,j) = str2double(nFrames_oneplaneSplit{j});
+            end
+        end  
+    else
+        saveParam = tempParam;
+    end
+    
+    if iscell(saveParam) && length(saveParam) > 1
+        if isequal(saveParam{:}); saveParam = saveParam{1};
+        else;saveParam = strjoin(saveParam);
+            if ~strcmp(varNames{i},'BehavFile') && ~strcmp(varNames{i},'ImagingFile') && ~strcmp(varNames{i},'BehavType') 
+                disp(['WARNING: Not all files have same ' varNames{i} '!'])
+            end
+        end
+    elseif isnumeric(saveParam)
+        saveParam = {saveParam};
+    end
+    paramValue = [paramValue;varNames{i};saveParam];
+
+    displayString = {'sbxpath';'h5path';'suite2ppath';'root';'savepath';'datapath';'behavpath'};
+    if any(contains(displayString,varNames{i}))
+        param = [param;varNames{i}];paramValueDisplay = [paramValueDisplay;saveParam];
+    end
+end
 
 switch currStr
-    case 'Tuning Curve'
-        
+    case 'getTuning'
         if length(filenames) ~=1 
             disp('ERROR: Please select only one file');
         end
         filename = filenames{1};
-        
-        
-        %sbxpath = configTable.sbxpath(strcmp(configTable.ImagingFile,filename));
-        %h5path = configTable.h5path(strcmp(configTable.ImagingFile,filename));
-        %suite2ppath = configTable.suite2ppath(strcmp(configTable.ImagingFile,filename));
-        %param = [param;'sbxpath';'h5path';'suite2ppath';'root';'savepath'];
-        %paramValue = [paramValue;'sbxpath';sbxpath;'h5path';h5path;'suite2ppath';suite2ppath;...
-        %    'root';handles.configRoot; 'savepath'; handles.savePath];
-        %paramValueDisplay = [paramValueDisplay;sbxpath;h5path;suite2ppath;handles.configRoot;handles.savePath];
-        % add filename into the parameter
-        %paramValue = [paramValue;'filename';filenames];
-        % add roi, TC file names
-        %paramValue = [paramValue;'datapath';configTable.datapath(strcmp(configTable.ImagingFile,filename))];
-        %paramValue = [paramValue;'roiFile';configTable.roiFile(strcmp(configTable.ImagingFile,filename))];
-        %paramValue = [paramValue;'tcFile';configTable.tcFile(strcmp(configTable.ImagingFile,filename))];
-        % specifc to getTuning, get the name of all tcFile and add nFrames_oneplane
-        tcFile = configTable.tcFile(strcmp(configTable.ImagingFile,filename));
-        filename_TC = configTable.ImagingFile(strcmp(configTable.tcFile,tcFile));
-        filename_nameFlag = strcmp(configTable.tcFile,tcFile);
-        filename_TCFlag = strcmp(filename_TC,filename);
-        % add nFrames_onePlane
-        nFrames_oneplaneStr = configTable.nFrames_oneplane(strcmp(configTable.ImagingFile(filename_nameFlag),filename_TC));
-        if ~iscell(nFrames_oneplaneStr); nFrames_oneplaneStr = {nFrames_oneplaneStr}; end
-        for i = 1:length(nFrames_oneplaneStr)
-            nFrames_oneplaneSplit = strsplit(nFrames_oneplaneStr{i});
-            for j = 1:str2double(imagingConfig.nPlanes)
-                nFrames_oneplane(i,j) = str2double(nFrames_oneplaneSplit{j});
-            end
-        end
-        paramValue = [paramValue;'nFrames_oneplane';nFrames_oneplane];
-        paramValue = [paramValue;'filenameTC';strjoin(filename_TC)];
-        paramValue = [paramValue;'filenameTCFlag';filename_TCFlag];
-        
-
-    case 'extractTC'
-        filenames = get(handles.listbox1,'String');
-        if ~iscell(filenames)
-            filenames = {filenames};
-        end
-        %configTable = getConfigTable(handles);
-        %sbxpath = configTable.sbxpath(strcmp(configTable.ImagingFile,filenames));
-        %h5path = configTable.h5path(strcmp(configTable.ImagingFile,filenames));
-        %suite2ppath = configTable.suite2ppath(strcmp(configTable.ImagingFile,filenames));
-        %datapath = configTable.datapath(strcmp(configTable.ImagingFile,filenames));
-        %roiFile = configTable.roiFile(strcmp(configTable.ImagingFile,filenames));
-        % check if all files have the same path and roi
-        if length(filenames) ~= 1
-            if ~(isequal(sbxpath{:}) && isequal(h5path{:}) && isequal(suite2ppath{:}) && isequal(datapath{:}))
-                disp('ERROR: Not all files have same path!')
-            end
-            if ~isequal(roiFile{:})
-                disp('ERROR: Not all files have same roi!')
-            end
-        end
-        % add path into parameters
-        %param = [param;'sbxpath';'h5path';'suite2ppath';'root';'savepath'];
-        %paramValue = [paramValue;'sbxpath';sbxpath{1};'h5path';h5path{1};'suite2ppath';suite2ppath{1};...
-        %    'root';handles.configRoot; 'savepath'; handles.savePath];
-        %paramValueDisplay = [paramValueDisplay;sbxpath{1};h5path{1};suite2ppath{1};handles.configRoot;handles.savePath];
-        % add filename into the parameter
-        %paramValue = [paramValue;'filename';strjoin(filenames)];
-        %paramValue = [paramValue;'datapath';datapath{1}];
-        %paramValue = [paramValue;'roiFile';roiFile{1}];  
-        % add nframes oneplane into parameter
-        findIndex = @(x)find(strcmp(configTable.ImagingFile,x));
-        nFrames_oneplaneStr = configTable.nFrames_oneplane(cellfun(findIndex,filenames));
-        if ~iscell(nFrames_oneplaneStr); nFrames_oneplaneStr = {nFrames_oneplaneStr}; end
-        for i = 1:length(nFrames_oneplaneStr)
-            nFrames_oneplaneSplit = strsplit(nFrames_oneplaneStr{i});
-            for j = 1:str2double(imagingConfig.nPlanes)
-                nFrames_oneplane(i,j) = str2double(nFrames_oneplaneSplit{j});
-            end
-        end
-        paramValue = [paramValue;'nFrames_oneplane';nFrames_oneplane];
-        
-        
-    case 'extractRedraw'
-        filenames = get(handles.listbox1,'String');
-        if ~iscell(filenames)
-            filenames = {filenames};
-        end
-        %configTable = getConfigTable(handles);
-        %sbxpath = configTable.sbxpath(strcmp(configTable.ImagingFile,filenames));
-        %h5path = configTable.h5path(strcmp(configTable.ImagingFile,filenames));
-        %suite2ppath = configTable.suite2ppath(strcmp(configTable.ImagingFile,filenames));
-        %datapath = configTable.datapath(strcmp(configTable.ImagingFile,filenames));
-        %roiFile = configTable.roiFile(strcmp(configTable.ImagingFile,filenames));
-        % check if all files have the same path and roi
-        if length(filenames) ~= 1
-            if ~(isequal(sbxpath{:}) && isequal(h5path{:}) && isequal(suite2ppath{:}) && isequal(datapath{:}))
-                disp('ERROR: Not all files have same path!')
-            end
-            if ~isequal(roiFile{:})
-                disp('ERROR: Not all files have same roi!')
-            end
-        end
-        % add path into parameters
-        %param = [param;'sbxpath';'h5path';'suite2ppath';'root';'savepath'];
-        %paramValue = [paramValue;'sbxpath';sbxpath{1};'h5path';h5path{1};'suite2ppath';suite2ppath{1};...
-        %    'root';handles.configRoot; 'savepath'; handles.savePath];
-        %paramValueDisplay = [paramValueDisplay;sbxpath{1};h5path{1};suite2ppath{1};handles.configRoot;handles.savePath];
-        % add filename into the parameter
-        %paramValue = [paramValue;'filename';strjoin(filenames)];
-        %paramValue = [paramValue;'datapath';datapath{1}];
-        %paramValue = [paramValue;'roiFile';roiFile{1}];  
-        % add nframes oneplane into parameter
-        findIndex = @(x)find(strcmp(configTable.ImagingFile,x));
-        nFrames_oneplaneStr = configTable.nFrames_oneplane(cellfun(findIndex,filenames));
-        if ~iscell(nFrames_oneplaneStr); nFrames_oneplaneStr = {nFrames_oneplaneStr}; end
-        for i = 1:length(nFrames_oneplaneStr)
-            nFrames_oneplaneSplit = strsplit(nFrames_oneplaneStr{i});
-            for j = 1:str2double(imagingConfig.nPlanes)
-                nFrames_oneplane(i,j) = str2double(nFrames_oneplaneSplit{j});
-            end
-        end
-        paramValue = [paramValue;'nFrames_oneplane';nFrames_oneplane];
-        
-    case 'ROI Tracking'
-        %filenames = get(handles.listbox1,'String');
-        %if ~iscell(filenames)
-        %    filenames = {filenames};
-        %end
-        %configTable = getConfigTable(handles);
-        %sbxpath = configTable.sbxpath(strcmp(configTable.ImagingFile,filenames));
-        %h5path = configTable.h5path(strcmp(configTable.ImagingFile,filenames));
-        %suite2ppath = configTable.suite2ppath(strcmp(configTable.ImagingFile,filenames));
-        %datapath = configTable.datapath(strcmp(configTable.ImagingFile,filenames));
-        %behavpath = configTable.behavpath(strcmp(configTable.ImagingFile,filenames));
-        %roiFile = configTable.roiFile(strcmp(configTable.ImagingFile,filenames));
-        %tcFile = configTable.tcFile(strcmp(configTable.ImagingFile,filenames));
-        % check if all files have the same path and roi
-        if ~(isequal(sbxpath{:}) && isequal(h5path{:}) && isequal(suite2ppath{:}) && isequal(datapath{:}) && isequal(behavpath{:}))
-            disp('ERROR: Not all files have same path!')
-        end
-        if ~(isequal(roiFile{:}) && isequal(tcFile{:}))
-            disp('ERROR: Not all files have same roi or TC!')
-        end
-        % add path into parameters
-        %param = [param;'sbxpath';'h5path';'suite2ppath';'root';'savepath';'datapath';'behavpath'];
-        %paramValue = [paramValue;'sbxpath';sbxpath{1};'h5path';h5path{1};'suite2ppath';suite2ppath{1};...
-        %    'root';handles.configRoot; 'savepath'; handles.savePath;'datapath';datapath{1};'behavpath';behavpath{1}];
-        %paramValueDisplay = [paramValueDisplay;sbxpath{1};h5path{1};suite2ppath{1};handles.configRoot;handles.savePath;...
-        %    datapath{1};behavpath{1}];
-        % add filename into the parameter
-        %paramValue = [paramValue;'filename';strjoin(filenames);'roiFile';roiFile{1};'tcFile';tcFile{1}];
-        % add nframes oneplane into parameter
-        findIndex = @(x)find(strcmp(configTable.ImagingFile,x));
-        nFrames_oneplaneStr = configTable.nFrames_oneplane(cellfun(findIndex,filenames));
-        if ~iscell(nFrames_oneplaneStr); nFrames_oneplaneStr = {nFrames_oneplaneStr}; end
-        for i = 1:length(nFrames_oneplaneStr)
-            nFrames_oneplaneSplit = strsplit(nFrames_oneplaneStr{i});
-            for j = 1:str2double(imagingConfig.nPlanes)
-                nFrames_oneplane(i,j) = str2double(nFrames_oneplaneSplit{j});
-            end
-        end
-        paramValue = [paramValue;'nFrames_oneplane';nFrames_oneplane];
-        
-    case 'ROI Revision'
-        % check if all files have the same path and roi
-        if ~(isequal(sbxpath{:}) && isequal(h5path{:}) && isequal(suite2ppath{:}) && isequal(datapath{:}) && isequal(behavpath{:}))
-            disp('ERROR: Not all files have same path!')
-        end
-        if ~(isequal(roiFile{:}) && isequal(tcFile{:}))
-            disp('ERROR: Not all files have same roi or TC!')
-        end       
-        % add nframes oneplane into parameter
-        findIndex = @(x)find(strcmp(configTable.ImagingFile,x));
-        nFrames_oneplaneStr = configTable.nFrames_oneplane(cellfun(findIndex,filenames));
-        if ~iscell(nFrames_oneplaneStr); nFrames_oneplaneStr = {nFrames_oneplaneStr}; end
-        for i = 1:length(nFrames_oneplaneStr)
-            nFrames_oneplaneSplit = strsplit(nFrames_oneplaneStr{i});
-            for j = 1:str2double(imagingConfig.nPlanes)
-                nFrames_oneplane(i,j) = str2double(nFrames_oneplaneSplit{j});
-            end
-        end
-        paramValue = [paramValue;'nFrames_oneplane';nFrames_oneplane];
-        
-    case 'Save MeanImg'
-        %filenames = get(handles.listbox1,'String');
-        %if ~iscell(filenames)
-        %    filenames = {filenames};
-        %end
-        %sbxpath = configTable.sbxpath(strcmp(configTable.ImagingFile,filenames));
-        %h5path = configTable.h5path(strcmp(configTable.ImagingFile,filenames));
-        %suite2ppath = configTable.suite2ppath(strcmp(configTable.ImagingFile,filenames));
-        %datapath = configTable.datapath(strcmp(configTable.ImagingFile,filenames));
-
-        % check if all files have the same path and roi
-        if ~(isequal(sbxpath{:}) && isequal(h5path{:}) && isequal(suite2ppath{:}) && isequal(datapath{:}))
-            disp('ERROR: Not all files have same path!')
-        end
-        % add path into parameters
-        %param = [param;'sbxpath';'h5path';'suite2ppath';'root';'savepath'];
-        %paramValue = [paramValue;'sbxpath';sbxpath{1};'h5path';h5path{1};'suite2ppath';suite2ppath{1};...
-        %    'root';handles.configRoot; 'savepath'; handles.savePath];
-        %paramValueDisplay = [paramValueDisplay;sbxpath{1};h5path{1};suite2ppath{1};handles.configRoot;handles.savePath];
-        % add filename into the parameter
-        %paramValue = [paramValue;'filename';strjoin(filenames)];
-        %paramValue = [paramValue;'datapath';datapath{1}];
-        % add nframes oneplane into parameter
-        findIndex = @(x)find(strcmp(configTable.ImagingFile,x));
-        nFrames_oneplaneStr = configTable.nFrames_oneplane(cellfun(findIndex,filenames));
-        if ~iscell(nFrames_oneplaneStr); nFrames_oneplaneStr = {nFrames_oneplaneStr}; end
-        for i = 1:length(nFrames_oneplaneStr)
-            nFrames_oneplaneSplit = strsplit(nFrames_oneplaneStr{i});
-            for j = 1:str2double(imagingConfig.nPlanes)
-                nFrames_oneplane(i,j) = str2double(nFrames_oneplaneSplit{j});
-            end
-        end
-        paramValue = [paramValue;'nFrames_oneplane';nFrames_oneplane];
-        
+    case 'extractTC'   
+    case 'extractRedraw'    
+    case 'roiTracking'
+    case 'roiRevision'        
+    case 'saveMeanImg'      
 end
 % display parameters and save it to the handle
 paramTableDisplay = table(param,paramValueDisplay,'VariableNames',{'name','value'});
@@ -684,30 +513,62 @@ function preprocessRunButton_Callback(hObject, eventdata, handles)
 allStr = get(handles.preprocessMenu,'String');
 currStr = allStr{get(handles.preprocessMenu,'Value')};
 switch currStr
-case 'Tuning Curve'
+case 'getTuning'
     getTuning(handles.param{:});
 case 'extractTC'
     extractTC(handles.param{:});
 case 'extractRedraw'
     extractRedraw(handles.param{:});
-case 'Save MeanImg'
+case 'saveMeanImg'
     getMeanImg(handles.param{:});
-case 'ROI Tracking'
+case 'roiTracking'
     roiTracking(handles.param{:});
-case 'ROI Revision'
+case 'roiRevision'
     roiRevision(handles.param{:});
+case 'roiRevisionPlot'
+    roiRevisionPlot(handles.param{:});
 end
 
-% --- Executes on button press in preprocessParamEditButton.
-function preprocessParamEditButton_Callback(hObject, eventdata, handles)
-% hObject    handle to preprocessParamEditButton (see GCBO)
+% --- Executes on button press in funcParam.
+function funcParam_Callback(hObject, eventdata, handles)
+% hObject    handle to funcParam (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hint: get(hObject,'Value') returns toggle state of preprocessParamEditButton
+% Hint: get(hObject,'Value') returns toggle state of funcParam
+%if hObject.Value==1
+%    set(handles.uitable2,'ColumnEditable',true(1,length(get(handles.uitable2,'ColumnName'))));
+%else
+%    set(handles.uitable2,'ColumnEditable',false(1,length(get(handles.uitable2,'ColumnName'))));
+%end
+%guidata(hObject,handles);
+paramValue = handles.param;
 if hObject.Value==1
-    set(handles.uitable2,'ColumnEditable',true(1,length(get(handles.uitable2,'ColumnName'))));
+    [funcParam, funcParamPath] = uigetfile(handles.configRoot);
+    set(handles.funcParamText,'String', funcParam); addpath(funcParamPath);
+    tempSplit = strsplit(funcParam,'.');
+    funcParamIndex = find(strcmp(paramValue, 'funcParam'));
+    if isempty(funcParamIndex); paramValue = [paramValue; 'funcParam'; tempSplit{1}];
+    else; paramValue{funcParamIndex+1} = tempSplit{1};end
 else
-    set(handles.uitable2,'ColumnEditable',false(1,length(get(handles.uitable2,'ColumnName'))));
+    funcParamIndex = find(strcmp(paramValue, 'funcParam'));
+    set(handles.funcParamText,'String', 'None');
+    if ~isempty(funcParamIndex);paramValue{funcParamIndex:funcParamIndex+1} = [];end
 end
+handles.param = paramValue; 
 guidata(hObject,handles);
+
+% --- If Enable == 'on', executes on mouse press in 5 pixel border.
+% --- Otherwise, executes on mouse press in 5 pixel border or over preprocessMenu.
+function preprocessMenu_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to preprocessMenu (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- If Enable == 'on', executes on mouse press in 5 pixel border.
+% --- Otherwise, executes on mouse press in 5 pixel border or over funcParam.
+function funcParam_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to funcParam (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)

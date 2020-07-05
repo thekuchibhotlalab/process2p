@@ -4,9 +4,10 @@ cd(sbxpath);
 allFileStruct = dir([sbxpath '\*.sbx']);
 allFile = {allFileStruct.name};
 for i = 1:length(allFile)
-    disp(['processing' allFile{i}])
+    disp(['processing' allFile{i}]); tic;
     sbxname = strsplit(allFile{i},'.');
     sbx2h5cropdir(sbxname{1},targetPath); 
+    toc;
 end
 
 end

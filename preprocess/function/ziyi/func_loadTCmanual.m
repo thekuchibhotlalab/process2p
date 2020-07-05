@@ -17,11 +17,11 @@ else
     nFuncChannel = 1;
     functionalChannel = {p.Results.functionalChannel};
 end
-nFrames_oneplane = p.Results.nFrames_oneplane;
+nFrames_oneplane = p.Results.nFrames_oneplane_load;
 nFrames_oneplane_select = nFrames_oneplane(logical(p.Results.filenameTCFlag),:);
 nFrames_oneplane_all = nFrames_oneplane;
 
-nFrames_oneplane_all = cumsum(nFrames_oneplane_all);
+nFrames_oneplane_all = cumsum(nFrames_oneplane_all,1);
 nFrames_oneplane_all = [zeros(1,nPlanes);nFrames_oneplane_all];
 
 tcFileSplit = strsplit(p.Results.tcFile);
@@ -51,6 +51,8 @@ for i = 1:nFuncChannel
         end
         TC_thisPlane{j} = tempTC;
         neuronEachPlane{i}(j) = size(tempTC,1);
+        disp(['Loading part of the TCfile. From ' int2str(min(frameIndex_thisPlane)) ' to '...
+            int2str(max(frameIndex_thisPlane)) ' frames. Total ' int2str(length(frameIndex_thisPlane)) ' frames.']);
     end
     TC_thisPlane = func_attachNanFrames(TC_thisPlane, nFrames_oneplane_select,varargin{:});
     TC(i,:) = TC_thisPlane;

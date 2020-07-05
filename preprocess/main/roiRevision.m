@@ -307,10 +307,29 @@ whichsessions_target = sum(tempTarget,1);
 %[~,whichsessions_foil] = InIntervals(start_foil(:,i),[nFrames_oneplane(1:end-1,i) nFrames_oneplane(2:end,i)]);
 %[~,whichsessions_target] = InIntervals(start_target(:,i),[nFrames_oneplane(1:end-1,i) nFrames_oneplane(2:end,i)]);
 
+
 %%    
+for k=1:nDays
+    ok_foil = ismember(whichsessions_foil,list_f{k});
+    l = sum(ok_foil);
+    matidx = repelem(0:nframes_psth-1,l,1);
+    idx = (matidx+repelem(start_foil(ok_foil,i),1,nframes_psth))';
+    m_foil = zfluo(:,idx(:));
+    temp = reshape(m_foil,nCells,nframes_psth,l);
+    traces_foil{k} = mean(temp,3);
+    
+    ok_target = ismember(whichsessions_target,list_f{k});
+    l = sum(ok_target);
+    matidx = repelem(0:nframes_psth-1,l,1);
+    idx = (matidx+repelem(start_target(ok_target,i),1,nframes_psth))';
+    m_target = zfluo(:,idx(:));
+    temp = reshape(m_target,nCells,nframes_psth,l);
+    traces_target{k} = mean(temp,3);
+end
+
+
 for j=cellnum 
     disp(['cell #' int2str(j)])
-    tic;
     tempCoord = [rois{1,j}.mnCoordinates(:,1),rois{1,j}.mnCoordinates(:,2)];
     bw = roipoly(zeros(data.ops.Lx,data.ops.Ly),rois{1,j}.mnCoordinates(:,2),rois{1,j}.mnCoordinates(:,1));
     [xt,yt] = find(bw==1);
@@ -323,13 +342,13 @@ for j=cellnum
     
     figdays = figure;         
     set(gcf, 'Units', 'Normalized', 'OuterPosition', [0.15, 0.04, 0.85, 0.96]);% Enlarge figure to full screen.
-
     % Plot norm traces
     subplot_tight(4,1,1,margins);hold on;title(['Cell ' num2str(j) ', raw traces']);
     plot(zfluo(j,:));        
     for k=1:nBaseline
         plot(intervals_baseline{i}(k,1)+1:intervals_baseline{i}(k,2),zfluo(j,intervals_baseline{i}(k,1)+1:intervals_baseline{i}(k,2)),'g');% color the baseline traces
     end
+
     %temp = nFrames_oneplane;
     %nFrames_oneplane = temp;
     PlotHVLines(nFrames_oneplane(2:end,i),'v','color',[0.8 0.8 0.8]);
@@ -337,50 +356,20 @@ for j=cellnum
     xlim([0 size(zfluo(j,:),2)]);
     for k=1:nTuning
         plot(intervals_tc{i}(k,1)+1:intervals_tc{i}(k,2),zfluo(j,intervals_tc{i}(k,1)+1:intervals_tc{i}(k,2)),'color',[0.8 0.8 0.8]);
-    end        
-
+    end
     % Plot tone-evoked resp
+    temp = [];
+    for k = 1:nDays; temp = [temp traces_target{k}(j,:) traces_foil{k}(j,:)];end
+    
     for k=1:nDays
-        %if ~ismember(allDay(k),behavDay), continue, end
-        %subplot_tight(4,nDays*2,nDays*2+allDay(k)*2+1,margins);hold on;
-        subplot_tight(4,nDays+2,nDays+2+allDay(k)+1,margins);hold on;
-        
-        ok_foil = ismember(whichsessions_foil,list_f{k});
-        l = sum(ok_foil);
-        matidx = repelem(0:nframes_psth-1,l,1);
-        idx = (matidx+repelem(start_foil(ok_foil,i),1,nframes_psth))';
-        m_foil = zfluo(j,idx(:));
-        traces_foil = reshape(m_foil,nframes_psth,l);
-        
-        ok_target = ismember(whichsessions_target,list_f{k});
-        l = sum(ok_target);
-        matidx = repelem(0:nframes_psth-1,l,1);
-        idx = (matidx+repelem(start_target(ok_target,i),1,nframes_psth))';
-        m_target = zfluo(j,idx(:));
-        traces_target = reshape(m_target,nframes_psth,l);
-        
-        %plot(traces_foil,'color',[0.8 0.8 0.8]);plot(mean(traces_foil,2),'k','linewidth',2);
-        plot(traces_foil,'color',[0.8 0.8 0.8]);
-        plot(traces_target,'color',[0.8 0.8 0.8]);
-        plot(mean(traces_target,2),'g','linewidth',2);
-        plot(mean(traces_foil,2),'r','linewidth',2);
-        title(['D' num2str(k)]);
-        %if allDay(k)==behavDay(1), ylimm1 = ylim; else, ylim(ylimm1); end
-        if k==1, ylimm1 = ylim; else, ylim(ylimm1); end
-        %PlotHVLines(pretone*round(acq),'v','color','r','linewidth',1);
+        subplot_tight(4,nDays+2,nDays+2+allDay(k)+1,margins);hold on;        
+        plot(smoothdata(traces_target{k}(j,:),'gaussian',5),'g','linewidth',2);
+        plot(smoothdata(traces_foil{k}(j,:),'gaussian',5),'r','linewidth',2);
+        ylim([min(temp) max(temp)])
+        %if k==1, ylimm1 = ylim; else, ylim(ylimm1); end
         PlotHVLines(pretone*round(acq),'v','color',[0 0 0],'linewidth',1);
-        %if k>1, axis off; end
-        %ylim(ylimm1);
         axis off
-        title(['D' num2str(k)]);
-        %axis off;
-        %subplot_tight(4,nDays*2,nDays*2+allDay(k)*2+2,margins);hold on;
-        
-        %plot(traces_target,'color',[0.8 0.8 0.8]);plot(mean(traces_target,2),'k','linewidth',2);
-        
-        
-        %PlotHVLines(pretone*round(acq),'v','color','g','linewidth',1);
-        
+        title(['D' num2str(k)]);        
     end
 
     % Plot this ROI in the field across days    
@@ -400,6 +389,7 @@ for j=cellnum
     localImgList = {};
     marginFlag = 0;
     subplot_day = cell(1,nDays);
+
     nCol = ceil(nDays/2);
     for k=1:nDays
         if isempty(avg_day{k}), continue;end
@@ -413,8 +403,8 @@ for j=cellnum
             marginFlag = 1;
         end
         localImg = uint16(avg_day{k}(ylimm(1)-extraMargin:ylimm(2)+extraMargin, xlimm(1)-extraMargin:xlimm(2)+extraMargin));
-        localImgList{k} = localImg; % cropped from 
-        imagesc(imadjust(adapthisteq(localImg, 'NBins', 256),[0 1],[0 1],0.2)); 
+        localImgList{k} = imadjust(adapthisteq(localImg, 'NBins', 256),[0 1],[0 1],0.2); % cropped from 
+        imagesc(localImgList{k}); 
         xlim([extraMargin+1 xlimm(2)-xlimm(1)+extraMargin+1]);ylim([extraMargin+1 ylimm(2)-ylimm(1)+extraMargin+1]);
         axis off;
         title(['D' num2str(k)]);
@@ -425,6 +415,8 @@ for j=cellnum
     if marginFlag == 1
         disp('cell on edge, adjust margin')
     end
+
+    disp('make GUI'); 
     % open the NEW GUI for selecting days and redrawing ROIs
     f_selection = figure; 
     set(gcf, 'Units', 'Normalized', 'OuterPosition', [0, 0.04, 0.15, 0.96]);
@@ -531,74 +523,88 @@ for j=cellnum
         return;
     end
 
+    disp('quit GUI')
     % draw red stuff on the rejected cells
-    nop = find(tempIsCell==0);
-    for this=1:length(nop)
-        k = nop(this);
-        pat = patch(subplot_day{k},yroi-round(xlimm(1)-extraMargin)+1, xroi-round(ylimm(1)-extraMargin)+1,'r','EdgeColor','none');
-        pat.FaceAlpha = 0.3;
-    end
-    %pause(2);
+    %nop = find(tempIsCell==0);
+    %for this=1:length(nop)
+    %    k = nop(this);
+    %    pat = patch(subplot_day{k},yroi-round(xlimm(1)-extraMargin)+1, xroi-round(ylimm(1)-extraMargin)+1,'r','EdgeColor','none');
+    %    pat.FaceAlpha = 0.3;
+    %end
+
     ishere(j,:) = tempIsCell;
     filled(j,:) = tempFilled;
     for d = 1:nDays
         roi_redrawn(j,d,:) = tempRoiCoord(d,:);
     end
     close(figdays);
-
+    
+    disp('savefig')
     saveFig = figure('visible','off');
     set(saveFig, 'Units', 'Normalized', 'OuterPosition', [0.15, 0.04, 0.85, 0.96]);
     tempCol = ceil(nDays/4);
     tight_margins = [0.001 0.001];
+    pat1 = cell(1,nDays);
+    pat2 = cell(1,nDays);
+    subplot_save = cell(1,nDays);
     for d = 1:nDays
-        subplot_tight(4,tempCol,d,tight_margins)
+        subplot_save{d} = subplot_tight(4,tempCol,d,tight_margins);
         hold on;
-        imagesc(imadjust(adapthisteq(localImgList{d}, 'NBins', 256),[0 1],[0 1],0.2)); 
+        imagesc(localImgList{d}); 
         xlim([extraMargin+1 xlimm(2)-xlimm(1)+extraMargin+1]);ylim([extraMargin+1 ylimm(2)-ylimm(1)+extraMargin+1]);
         title(['D' num2str(d)]);
         colormap gray;
         axis off
         redrawFlag = tempRoiCoord{d,1};
         roixy = tempRoiCoord{d,3};
-        pat1 = patch(roixy(:,1)-round(xlimm(1)-extraMargin)+1,roixy(:,2)-round(ylimm(1)-extraMargin)+1,...
+        pat1{d} = patch(roixy(:,1)-round(xlimm(1)-extraMargin)+1,roixy(:,2)-round(ylimm(1)-extraMargin)+1,...
             'b','FaceColor','None');
         if redrawFlag==1
-            pat1.EdgeColor = 'b';
+            pat1{d}.EdgeColor = 'b';
         elseif  tempIsCell(d)
-            pat1.EdgeColor = 'g';
+            pat1{d}.EdgeColor = 'g';
         else
-            pat1.EdgeColor = 'r';
+            pat1{d}.EdgeColor = 'r';
         end
     end
-    %pause(2);
     saveas(saveFig,[revisePath sep 'checkCell' sep 'check_cell_plane' num2str(i-1) '_cell' int2str(j) '.png']);
-    close(saveFig)
+    %close(saveFig)
     
-    fillFig = figure('visible','off');
-    set(fillFig, 'Units', 'Normalized', 'OuterPosition', [0.15, 0.04, 0.85, 0.96]);
-    tempCol = ceil(nDays/4);
-    tight_margins = [0.001 0.001];
     for d = 1:nDays
-        subplot_tight(4,tempCol,d,tight_margins)
-        hold on;
-        imagesc(imadjust(adapthisteq(localImgList{d}, 'NBins', 256),[0 1],[0 1],0.2)); 
-        xlim([extraMargin+1 xlimm(2)-xlimm(1)+extraMargin+1]);ylim([extraMargin+1 ylimm(2)-ylimm(1)+extraMargin+1]);
-        title(['D' num2str(d)]);
-        colormap gray;
-        axis off
-        roixy = tempRoiCoord{d,3};
-        pat1 = patch(roixy(:,1)-round(xlimm(1)-extraMargin)+1,roixy(:,2)-round(ylimm(1)-extraMargin)+1,...
+        delete(pat1{d});
+        pat2{d} = patch(subplot_save{d},roixy(:,1)-round(xlimm(1)-extraMargin)+1,roixy(:,2)-round(ylimm(1)-extraMargin)+1,...
             'b','FaceColor','None');
         if tempFilled(d)==1
-            pat1.EdgeColor = 'r';
+            pat2{d}.EdgeColor = 'r';
         else
-            pat1.EdgeColor = 'g';
+            pat2{d}.EdgeColor = 'g';
         end
     end
+    %fillFig = figure('visible','off');
+    %set(fillFig, 'Units', 'Normalized', 'OuterPosition', [0.15, 0.04, 0.85, 0.96]);
+    %tempCol = ceil(nDays/4);
+    %tight_margins = [0.001 0.001];
+    %for d = 1:nDays
+    %    subplot_tight(4,tempCol,d,tight_margins)
+    %    hold on;
+    %    imagesc(localImgList{d}); 
+    %    xlim([extraMargin+1 xlimm(2)-xlimm(1)+extraMargin+1]);ylim([extraMargin+1 ylimm(2)-ylimm(1)+extraMargin+1]);
+    %    title(['D' num2str(d)]);
+    %    colormap gray;
+    %    axis off
+    %    roixy = tempRoiCoord{d,3};
+    %    pat1 = patch(roixy(:,1)-round(xlimm(1)-extraMargin)+1,roixy(:,2)-round(ylimm(1)-extraMargin)+1,...
+    %        'b','FaceColor','None');
+    %    if tempFilled(d)==1
+    %        pat1.EdgeColor = 'r';
+    %    else
+    %        pat1.EdgeColor = 'g';
+    %    end
+    %end
     %pause(2);
-    saveas(fillFig,[revisePath sep 'checkFill' sep 'check_fill_plane' num2str(i-1) '_cell' int2str(j) '.png']);
-    close(fillFig)
-
+    saveas(saveFig,[revisePath sep 'checkFill' sep 'check_fill_plane' num2str(i-1) '_cell' int2str(j) '.png']);
+    close(saveFig)
+    
     % Save indiv plane
     save([revisePath sep 'ishere_plane' num2str(i-1) '.mat'],'ishere');
     save([revisePath sep 'filled_plane' num2str(i-1) '.mat'],'filled');
@@ -657,7 +663,7 @@ function redraw_callback(hObject,eventdata,nDay,nCell,imgData)
         croi = imgData{7};
         
         hold on;
-        imagesc(imadjust(adapthisteq(localImg, 'NBins', 256),[0 1],[0 1],0.2)); 
+        imagesc(localImg); 
         xlim([extraMargin+1 xlimm(2)-xlimm(1)+extraMargin+1]);ylim([extraMargin+1 ylimm(2)-ylimm(1)+extraMargin+1]);
         pat = patch(yroi-round(xlimm(1)-extraMargin)+1, xroi-round(ylimm(1)-extraMargin)+1, 'g', 'FaceColor','None');
         plot(extraMargin+1+croi(2)-xlimm(1),extraMargin+1+croi(1)-ylimm(1),'r+');
@@ -756,7 +762,7 @@ function previewB_callback(hObject,eventdata,imgData)
     for k = 1:size(tempRoiCoord,1)
         subplot_tight(4,tempCol,k,margins)
         hold on;
-        imagesc(imadjust(adapthisteq(localImgList{k}, 'NBins', 256),[0 1],[0 1],0.2)); 
+        imagesc(localImgList{k}); 
         xlim([extraMargin+1 xlimm(2)-xlimm(1)+extraMargin+1]);ylim([extraMargin+1 ylimm(2)-ylimm(1)+extraMargin+1]);
         title(['D' num2str(k)]);
         colormap gray;

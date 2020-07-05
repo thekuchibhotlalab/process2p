@@ -13,6 +13,7 @@ global nPlanes
 
 nPlanes = str2double(p.Results.nPlanes);
 filename = p.Results.filename;
+funcParam = p.Results.funcParam;
 
 if iscell(filename) && length(filename) >1
     disp('ERROR - More than one session selected!')
@@ -52,7 +53,7 @@ if nFuncChannel == 1
     end
     %PROCESS TUNING DATA
     TC_allPlane = cat(1,TC{:})';
-    getTuning_oneChannel(TC_allPlane,neuronEachPlane{1},roisCoord(1,:),savePath,p.Results.suite2ppath);
+    getTuning_oneChannel(TC_allPlane,neuronEachPlane{1},roisCoord(1,:),savePath,p.Results.suite2ppath,funcParam);
 
 elseif nFuncChannel == 2
     for i = 1:nFuncChannel        
@@ -66,31 +67,21 @@ elseif nFuncChannel == 2
         %PROCESS TUNING DATA
 
         TC_channel = cat(1,TC{i,:})';
-        getTuning_oneChannel(TC_channel,neuronEachPlane{i},roisCoord(i,:),savePath,p.Results.suite2ppath);
+        getTuning_oneChannel(TC_channel,neuronEachPlane{i},roisCoord(i,:),savePath,p.Results.suite2ppath,funcParam);
     end
 end
 %---------END OF GET TUNING FUNCTION-----------
 end
 
 %---------FUNCTION TO PROCESS CALCIUM TRACES-----------
-function getTuning_oneChannel(TC,neuronEachPlane,roisBound,savePath,suite2ppath)
+function getTuning_oneChannel(TC,neuronEachPlane,roisBound,savePath,suite2ppath,funcParam)
 
 %---------DECLARE SOME PARAMETERS-----------
 global nPlanes
-nTones = 17;
-nTrials = 10;
-nFramesPerTone = 100/nPlanes; % 50
-nFramesPerTrial = nFramesPerTone * nTones; % 850
-startTrial = 2; % the first tone is on frame 0
-nFrames = nFramesPerTrial*nTrials; % 4250
-frameRate = 30.98/nPlanes; % in the future, do not hard code this.
-pretoneFrames = 10;
-baselineFrames = 5;
-nNeuron = size(TC,2);
-smoothWindow = 5;
 sep = '\';
-saveSingleNeuronFlag = true;
-toneOnset = 0/nPlanes;
+nNeuron = size(TC,2);
+eval(funcParam);
+
 %---------SHIFT THE TC FOR PRETONE PERIOD-----------
 TC_original = TC; % keep a copy of original TC
 TC = circshift(TC,1-toneOnset,1); % shift 1 on 1st axix so that tone is on frame 1 instead of 0
