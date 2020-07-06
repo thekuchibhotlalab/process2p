@@ -2,7 +2,7 @@ function getMeanImg(varargin)
 
 p = func_createInputParser();
 p.parse(varargin{:});
-sep = '\';
+sep = p.Results.sep;
 
 %---------GET RELEVANT PARAMETERS-----------
 global info
@@ -17,6 +17,8 @@ h5path = p.Results.h5path;
 datapath = p.Results.datapath;
 savepath = p.Results.savepath;
 nFrames_oneplane = p.Results.nFrames_oneplane;
+alignMethod = p.Results.alignMethod;
+if ~isempty(alignMethod); alignMethod = strsplit(alignMethod); end 
 %---------CHECK NUMBER OF CHANNELS-----------
 data = load([p.Results.sbxpath sep filenames{1} '.mat']); 
 infosbx = data.info;
@@ -66,21 +68,27 @@ for i=1:nPlanes
             fileID = fopen([suite2ppath sep 'plane' num2str(i-1) sep 'data_chan' int2str(chan) '.bin'],'r'); % open binary file
         end
         for j=1:nFiles
-            k=0; a=1;
-            nimg = nFrames_oneplane(j,i);
-            blksize = 5000;%2000; % nb of frames loaded at a time (depend on RAM)
-            to_read = min(blksize,nimg-k);  
-            avgA = []; avgA = nan(lx,ly);
-            while to_read>0
-                A = fread(fileID,ly*lx*to_read,'*int16');
-                A = reshape(A,lx,ly,[]);
-                avgA(:,:,a) = mean(A,3);
-                a=a+1;
-                k = k+to_read;
-                to_read = min(blksize,nimg-k);
+            if  ~isempty(alignMethod) && ~strcmp(alignMethod{j},'suite2p')
+                loadFilename = [alignMethod{j} sep filenames{j} '_plane' int2str(i-1) '_stackreg.h5'];
+                tempA = h5read(loadFilename,'/data');
+                avg_sessions{j,i,chan} = mean(tempA,3);
+            else
+                k=0; a=1;
+                nimg = nFrames_oneplane(j,i);
+                blksize = 5000;%2000; % nb of frames loaded at a time (depend on RAM)
+                to_read = min(blksize,nimg-k);  
+                avgA = []; avgA = nan(lx,ly);
+                while to_read>0
+                    A = fread(fileID,ly*lx*to_read,'*int16');
+                    A = reshape(A,lx,ly,[]);
+                    avgA(:,:,a) = mean(A,3);
+                    a=a+1;
+                    k = k+to_read;
+                    to_read = min(blksize,nimg-k);
+                end
+                % to check the bloc averages: 
+                avg_sessions{j,i,chan} = mean(avgA,3)';
             end
-            % to check the bloc averages: 
-            avg_sessions{j,i,chan} = mean(avgA,3)';
         end   
         % Save the mean img of this plane   
         sessionMeanImg = avg_sessions(:,i);

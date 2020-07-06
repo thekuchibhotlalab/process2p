@@ -37,6 +37,7 @@ p.addParameter('neuropil', 'false')
 p.addParameter('neuropilMethod', 'mean')
 p.addParameter('meanImgFlag', [])
 p.addParameter('funcParam', 'None')
+p.addParameter('alignMethod', [])
 p.addParameter('sep', '\')
 
 end
