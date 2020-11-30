@@ -1,5 +1,6 @@
 function cellnum = func_getRedrawNum(redrawPath,checkPlane)
 % e.g. path: E:\excitData\cd042\roi\checkCell\revision
+% input plane as 0 or 1
 allFileStruct = dir([redrawPath '\*.png']);
 allFile = {allFileStruct.name};
 count = 0;

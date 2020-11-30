@@ -4,10 +4,12 @@ p = inputParser;
 p.KeepUnmatched = true;
 p.addParameter('imageJpath', 'E:\KishoreLab\Shared\Matlab\Fiji.app')
 p.addParameter('MIJIpath', 'E:\KishoreLab\Shared\Matlab\preprocessing\MIJI')
+p.addParameter('method', 'Rigid Body')
 p.parse(varargin{:});
 sep = '\';
 MIJIpath = p.Results.MIJIpath;
 imageJpath = p.Results.imageJpath;
+alignMethod = p.Results.method;
 
 filename = [mouse '_config.csv'];
 configTable = readtable(filename);
@@ -70,7 +72,7 @@ for j=1:nPlanes
             nFrames = nFrameInBloc;
             bloc = imgStack{j}(:,:,start:start+nFrames-1);
             if k==1
-                sessionRefImg =  uint16(repmat( imgStack{j}(:,:,1),1,1,nFrameInBloc));
+                sessionRefImg =  uint16(repmat( imgStack{j}(:,:,end),1,1,nFrameInBloc));
                 MIJ.createImage(['Template_plane' int2str(j)],sessionRefImg,1); 
             elseif k==2
                 MIJ.selectWindow(['Template_plane' int2str(j)]); MIJ.run('Close')
@@ -100,7 +102,7 @@ for j=1:nPlanes
     fileNameAlign = [savepath sep sessionName '_plane' int2str(j-1) '_rotation.txt'];  
     MIJ.run('MultiStackReg',['stack_1=Template_plane' int2str(j) ...
             ' action_1=[Use as Reference] file_1=[] stack_2=Mean_plane' int2str(j) ' action_2=[Align to First Stack] file_2='...
-            fileNameAlign ' transformation=[Rigid Body] save']);
+            fileNameAlign ' transformation=[' alignMethod '] save']);
         
     MIJ.selectWindow(['Template_plane' int2str(j)]);MIJ.run('Close');
     MIJ.selectWindow(['Mean_plane' int2str(j)]);MIJ.run('Close');
@@ -115,7 +117,7 @@ for j=1:nPlanes
             fileNameAlign = [savepath sep sessionName '_plane' int2str(j-1) '_rotation_temp.txt'];  
             MIJ.run('MultiStackReg',['stack_1=Template_plane' int2str(j) ...
                 ' action_1=[Use as Reference] file_1=[] stack_2=Mean_plane' int2str(j) ' action_2=[Align to First Stack] file_2='...
-                fileNameAlign ' transformation=[Rigid Body] save']);
+                fileNameAlign ' transformation=[' alignMethod '] save']);
             MIJ.selectWindow(['Template_plane' int2str(j)]);MIJ.run('Close');
             MIJ.selectWindow(['Mean_plane' int2str(j)]);MIJ.run('Close');
 
@@ -125,7 +127,7 @@ for j=1:nPlanes
         end
         MIJ.createImage('ToAlign',bloc,1);
         MIJ.run('MultiStackReg',['stack_1=ToAlign'...
-            ' action_1=[Load Transformation File] file_1=' fileNameAlign ' stack_2=None action_2=Ignore file_2=[] transformation=[Rigid Body]']);
+            ' action_1=[Load Transformation File] file_1=' fileNameAlign ' stack_2=None action_2=Ignore file_2=[] transformation=[' alignMethod ']']);
         MIJ.selectWindow('ToAlign');
         img_aligned = uint16(MIJ.getCurrentImage);
         img_save(:,:,start:start+nFrames-1) = img_aligned;

@@ -60,6 +60,7 @@ if nFuncChannel == 1
     planeToDo = str2double(answer{1});
     chanToDo = 1;
     avg_session = load([datapath sep 'meanImg' sep mouse '_MeanImgPerSessions_Plane' num2str(planeToDo-1) '.mat']);
+    %avg_session = load([datapath sep 'meanImg' sep mouse '_Top2ImgPerSessions_Plane' num2str(planeToDo-1) '.mat']);
 else
     prompt = {'Enter Plane (1/2):','Enter Channel (green/red):'};
     dlgtitle = 'Input';

@@ -17,7 +17,7 @@ else
     nFuncChannel = 1;
     functionalChannel = {p.Results.functionalChannel};
 end
-nFrames_oneplane = p.Results.nFrames_oneplane_load;
+nFrames_oneplane = p.Results.nFrames_oneplane_TC;
 nFrames_oneplane_select = nFrames_oneplane(logical(p.Results.filenameTCFlag),:);
 nFrames_oneplane_all = nFrames_oneplane;
 

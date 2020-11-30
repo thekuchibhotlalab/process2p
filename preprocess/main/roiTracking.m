@@ -121,9 +121,21 @@ for i = 1:length(behavDay)
         behavMatrix = load([behavpath sep imgData.BehavFile{sessionIdx_thisday_behav(j)}]);
         nTrials = size(behavMatrix,1);
 
-        foil = unique([behavMatrix(behavMatrix(:,RESPONSE)==FA,TONE);behavMatrix(behavMatrix(:,RESPONSE)==CR,TONE)]);
-        target = unique([behavMatrix(behavMatrix(:,RESPONSE)==H,TONE);behavMatrix(behavMatrix(:,RESPONSE)==M,TONE)]);
-                
+        if all(~isnan(behavMatrix(:,TONE))) % in normal behavior setup
+            foil = unique([behavMatrix(behavMatrix(:,RESPONSE)==FA,TONE);behavMatrix(behavMatrix(:,RESPONSE)==CR,TONE)]);
+            target = unique([behavMatrix(behavMatrix(:,RESPONSE)==H,TONE);behavMatrix(behavMatrix(:,RESPONSE)==M,TONE)]);
+            if length(foil) > 1 || length(target)>1
+                error('Error in roiTracking - multiple T/F tones detected. Check Behavior File.');
+            end
+        else % exceptions for unpaired conditions
+            if ~exist('unpairedFlag','var')
+                disp('Unpaired animals detected');               
+                tempTones = behavMatrix(:,TONE); tempTones = tempTones(~isnan(tempTones)); tempTones = unique(tempTones);
+                if length(tempTones) ~= 2; error('Error in roiTracking - more than 2 T/F tones detected (unpaired). Check Behavior File.'); end
+                foil = tempTones(1); target = tempTones(2);
+                unpairedFlag = 1;
+            end
+        end
         foil_frames = behavMatrix(ismember(behavMatrix(:,TONE),foil),TONEF);
         target_frames = behavMatrix(ismember(behavMatrix(:,TONE),target),TONEF);
         nFoil = size(foil_frames,1);
@@ -374,6 +386,11 @@ for j=c:nCells
     marginFlag = 0;
     subplot_day = cell(1,nDays);
     nCol = ceil(nDays/3);
+    % new image enhancement
+    %for k=1:nDays
+    %    avg_day{k} = enhancedImage(avg_day{k},[1 size(avg_day{k},1)],[1 size(avg_day{k},2)]);
+    %end
+    
     for k=1:nDays
         if isempty(avg_day{k}), continue;end
         subplot_day{k} = subplot_tight(5,nCol,nCol*4-nCol*2+k,margins);      
@@ -382,11 +399,14 @@ for j=c:nCells
         extraMargin = 20;
         if (ylimm(1)-extraMargin) < 1  || (xlimm(1)-extraMargin) < 1 ||...
                 (ylimm(2)+extraMargin)> size(avg_day{k},1) || (xlimm(2)+extraMargin) > size(avg_day{k},2)
-            extraMargin = min([ylimm(1)+1, xlimm(1)+1 size(avg_day{k},1)-ylimm(2)   size(avg_day{k},2)-xlimm(2)]);
+            extraMargin = min([ylimm(1)-1, xlimm(1)-1 size(avg_day{k},1)-ylimm(2)   size(avg_day{k},2)-xlimm(2)]);
             marginFlag = 1;
         end
+        % code for original image enhancement
         localImg = uint16(avg_day{k}(ylimm(1)-extraMargin:ylimm(2)+extraMargin, xlimm(1)-extraMargin:xlimm(2)+extraMargin));
-        localImgList{k} = imadjust(adapthisteq(localImg, 'NBins', 256)); % cropped from 
+        localImgList{k} = imadjust(adapthisteq(localImg, 'NBins', 256)); 
+        
+        %localImgList{k} = avg_day{k}(ylimm(1)-extraMargin:ylimm(2)+extraMargin, xlimm(1)-extraMargin:xlimm(2)+extraMargin);
         %imagesc(imadjust(adapthisteq(localImg, 'NBins', 256),[0 1],[0 1],0.2)); 
         imagesc(localImgList{k}); 
         xlim([extraMargin+1 xlimm(2)-xlimm(1)+extraMargin+1]);ylim([extraMargin+1 ylimm(2)-ylimm(1)+extraMargin+1]);

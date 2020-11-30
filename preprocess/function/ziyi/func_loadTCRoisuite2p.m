@@ -27,8 +27,8 @@ TC = cell(1,nPlanes);
 for i=1:nPlanes
     cd([p.Results.suite2ppath '\plane' num2str(i-1)]);
     data = load('Fall.mat'); 
+    %tempTC = data.spks;
     tempTC = data.F;
-    
     switch roiType
     case 'axon'
         iscellFlag = ~data.iscell(:,1);

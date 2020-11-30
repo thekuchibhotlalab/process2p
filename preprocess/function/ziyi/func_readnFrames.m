@@ -1,6 +1,11 @@
-function [nFrames, nFrames_oneplane] = func_readnFrames(mouse)
+function [nFrames, nFrames_oneplane] = func_readnFrames(mouse, varargin)
 
-filename = [mouse '_config.csv'];
+p = inputParser;
+p.KeepUnmatched = true;
+p.addParameter('root', pwd)
+p.parse(varargin{:});
+
+filename = [p.Results.root '\' mouse '_config.csv'];
 configTable = readtable(filename);
 
 nFrames_oneplaneStr = configTable.nFrames_oneplane;

@@ -254,9 +254,33 @@ filenames = get(handles.listbox1,'String');if ~iscell(filenames);filenames = {fi
 filenameFlag = strcmp(configTable.ImagingFile,filenames);
 
 
+binSelected = configTable.suite2ppath(filenameFlag);
+%if length(tcFileSelected)>1 && ~isequal(tcFileSelected{:}); disp('ERROR: Selected files does not have same tcFile!'); end
+binSelected_removeNone = binSelected(~strcmp(binSelected,'None'));
+[~,~,j]=unique(binSelected_removeNone);
+binCommon = binSelected_removeNone{mode(j)}; % get all tcfile name of selected files
+% get all the imaging files with same tcFile name with selected filenames
+filename_binFlagCommon = strcmp(configTable.suite2ppath,binCommon);
+% nFrames_oneplane_load is used to load TC file corresponding to selected files 
+nFrames_oneplane_binStr = configTable.nFrames_oneplane(filename_binFlagCommon);
+% filename_loadFlag is used to identify where selected files 
+filename_binFlag = filename_binFlagCommon; filename_binFlag(~filenameFlag) = 0; filename_binFlag = filename_binFlag(filename_binFlagCommon);
+
+if ~iscell(nFrames_oneplane_binStr); nFrames_oneplane_binStr = {nFrames_oneplane_binStr}; end
+for i = 1:length(nFrames_oneplane_binStr)
+    nFrames_oneplane_binStrSplit = strsplit(nFrames_oneplane_binStr{i});
+    for j = 1:str2double(imagingConfig.nPlanes)
+        nFrames_oneplane_bin(i,j) = str2double(nFrames_oneplane_binStrSplit{j});
+    end
+end
+
+filename_bin = configTable.ImagingFile(filename_binFlag);
+paramValue = [paramValue;'filenameBin';strjoin(filename_bin);'filenameBinFlag';filename_binFlag;'nFrames_oneplane_bin';nFrames_oneplane_bin];
+
+
 tcFileSelected = configTable.tcFile(filenameFlag);
-if length(tcFileSelected)>1 && ~isequal(tcFileSelected{:}); disp('ERROR: Selected files does not have same tcFile!'); end
-[~,~,j]=unique(tcFileSelected);
+tcFileSelected_removeNone = tcFileSelected(~strcmp(tcFileSelected,'None'));
+[~,~,j]=unique(tcFileSelected_removeNone);
 tcFilenameCommon = tcFileSelected{mode(j)}; % get all tcfile name of selected files
 % get all the imaging files with same tcFile name with selected filenames
 filename_TCFlag = strcmp(configTable.tcFile,tcFilenameCommon);
@@ -273,10 +297,8 @@ for i = 1:length(nFrames_oneplane_loadStr)
     end
 end
 
-
-
 filename_TC = configTable.ImagingFile(filename_TCFlag);
-paramValue = [paramValue;'filenameTC';strjoin(filename_TC);'filenameTCFlag';filename_loadFlag;'nFrames_oneplane_load';nFrames_oneplane_load];
+paramValue = [paramValue;'filenameTC';strjoin(filename_TC);'filenameTCFlag';filename_loadFlag;'nFrames_oneplane_TC';nFrames_oneplane_load];
 
 % save the root and savepath parameters
 param = [param;'root';'savepath'];paramValueDisplay = [paramValueDisplay;handles.configRoot; handles.savePath];
@@ -300,6 +322,7 @@ for i = 1:length(varNames)
     end
     
     if iscell(saveParam) && length(saveParam) > 1
+        
         if isequal(saveParam{:}); saveParam = saveParam{1};
         else;saveParam = strjoin(saveParam);
             if ~strcmp(varNames{i},'BehavFile') && ~strcmp(varNames{i},'ImagingFile') && ~strcmp(varNames{i},'BehavType') 

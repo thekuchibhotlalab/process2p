@@ -6,7 +6,7 @@ function sbx2h5cropdir(fname,targetDir,varargin)
 x_crop_start = 110; %x-value to start strips
 x_crop_end = 0;
 y_crop_start = 100; %y-value to start strips
-y_crop_end = 41; % take y from 100:755
+y_crop_end = 0; % take y from 100:755
  
 fnh = [targetDir '\' fname ,'.h5'];
 

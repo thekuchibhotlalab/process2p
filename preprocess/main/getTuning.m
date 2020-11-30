@@ -79,6 +79,7 @@ function getTuning_oneChannel(TC,neuronEachPlane,roisBound,savePath,suite2ppath,
 %---------DECLARE SOME PARAMETERS-----------
 global nPlanes
 sep = '\';
+sumTC = sum(TC(1:end-1,:),1); TC(:,sumTC==0) = 5000 + randi(100,size(TC,1),sum(sumTC==0));
 nNeuron = size(TC,2);
 eval(funcParam);
 
@@ -89,7 +90,8 @@ TC = circshift(TC,1-toneOnset,1); % shift 1 on 1st axix so that tone is on frame
 TC = smoothdata(TC,1,'gaussian',smoothWindow);
 TCpretone = circshift(TC,pretoneFrames,1);
 %---------COMPUTE DFF-----------
-baseline = prctile(TC,50,1);
+%baseline = prctile(TC,50,1);
+baseline = mean(TC,1);
 TC = TC ./ repmat(baseline,[size(TC,1) 1]);
 TCpretone = TCpretone ./ repmat(baseline,[size(TC,1) 1]);
 %---------RESHAPE TC AND PRETONE-----------
@@ -243,12 +245,24 @@ for i = 1:nNeuron
     baseAct = squeeze(TCpretone_reorder(pretoneFrames,:,:,i));
     % Do paired tests
     for j = 1:nTones
-        [h,p] = ttest(peakAct(j,pairedTestTrials),baseAct(j,pairedTestTrials),'alpha',ttestAlpha,'tail','right');
-        ttestToneP(j,i) = p; 
-        ttestToneH(j,i) = h; 
-        [p,h,stats] = signrank(peakAct(j,pairedTestTrials),baseAct(j,pairedTestTrials),'alpha',signrankAlpha,'tail','right');
-        signrankToneP(j,i) = p;
-        signrankToneH(j,i) = h;
+        try
+            [h,p] = ttest(peakAct(j,pairedTestTrials),baseAct(j,pairedTestTrials),'alpha',ttestAlpha,'tail','right');
+            ttestToneP(j,i) = p; 
+            ttestToneH(j,i) = h; 
+        catch 
+            disp(['Error in Cell ' int2str(i) 'Tone ' int2str(j) ' t test']);
+            ttestToneP(j,i) = 1; % set p at 1
+            ttestToneH(j,i) = 0; % set hypothesis wrong
+        end
+        try 
+            [p,h,stats] = signrank(peakAct(j,pairedTestTrials),baseAct(j,pairedTestTrials),'alpha',signrankAlpha,'tail','right'); 
+            signrankToneP(j,i) = p;
+            signrankToneH(j,i) = h;
+        catch 
+            disp(['Error in Cell ' int2str(i) 'Tone ' int2str(j) ' signrank test']);
+            signrankToneP(j,i) = 1; % set p at 1
+            signrankToneH(j,i) = 0; % set hypothesis wrong
+        end
     end
     % Do ANOVA test
     groupNames = cell(1,nTones+1);
@@ -265,10 +279,14 @@ for i = 1:nNeuron
 
     [p,h,stats] = anova1(peakANOVACorr(:,:,i),groupNames,'off');
     anovaPeakCorr (1,i) = p;
+
     [results,~,~,~] = multcompare(stats,'Display','off');
     results = results(results(:,2)==(nTones+1),6);
     anovaSignifToneCorr(:,i) = (results<0.05);
     anovaPeakCorr (2,i) = p<0.05 && sum(results<0.05)>0;
+    
+    
+    
     
     % Do ROC analysis
     % take only 5 frames before 
