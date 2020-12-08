@@ -1,9 +1,10 @@
 clear;
 datapath ='C:\Users\zzhu34\Documents\tempdata\deconv_test_cd036\smooth3000\baseline';
 %filenameList = {'cd036_confoo_smin.mat','cd036_foo_smin.mat','cd036_thre_smin.mat'};
-filenameList = {'cd036_calman_foo95_optb_nosmin.mat','cd036_calman_foo95_optb.mat','cd036_calman_foo95.mat'};
+filenameList = {'cd036_calman_confoo_optb.mat','cd036_calman_foo90_optb_nosmin.mat',...
+    'cd036_calman_foo95_optb_nosmin.mat','cd036_calman_foo95_optb.mat','cd036_calman_foo99_optb.mat','cd036_calman_thre95_optb.mat'};
 shortFilename = []; for i = 1:length(filenameList)
-    shortFilename{i} = filenameList{i}(7:end-4); shortFilename{i}(strfind(shortFilename{i},'_'))=' ';end
+    shortFilename{i} = filenameList{i}(14:end-4); shortFilename{i}(strfind(shortFilename{i},'_'))=' ';end
 for i = 1:length(filenameList)
     disp([filenameList{i} ' started!'])
     load([datapath '\' filenameList{i}],'s','c','day');
@@ -24,16 +25,16 @@ end
 %% plot 1 - the averaged activity over days in tone-evoked period
 figure; hold on;
 dffFlat = dffMean(:)';tempX =[];
-for i = 1:3; spikeFlat(:,i) = reshape(spikeMean(:,:,i),1,[]) ; end
+for i = 1:length(filenameList); spikeFlat(:,i) = reshape(spikeMean(:,:,i),1,[]) ; end
 [N,edges,bin] = histcounts(dffFlat,linspace(0,prctile(dffFlat,98),21));
 for j = 1:20 
     tempX(j) = mean(edges(j:j+1));
-    for i = 1:3
+    for i = 1:length(filenameList)
         tempMean(j,i) = mean(spikeFlat(bin==j,i)); tempSEM(j,i) = std(spikeFlat(bin==j,i))/sqrt(N(j));     
     end
 end
-for i = 1:3; plot(tempX,tempMean(:,i),'Color',matlabColors(i)); end
-for i = 1:3
+for i = 1:length(filenameList); plot(tempX,tempMean(:,i),'Color',matlabColors(i)); end
+for i = 1:length(filenameList)
     f = fillErrorbarPlot(tempX,tempMean(:,i)', tempSEM(:,i)',matlabColors(i),'LineStyle','none');
     f.FaceAlpha = 0.1;
     scatter(dffFlat,spikeFlat(:,i),5,matlabColors(i), 'filled' , 'o', 'MarkerFaceAlpha', 0.1); 
@@ -45,19 +46,19 @@ legend(shortFilename{:},'Location','Best');
 title('Tone-evoked activity')
 %% plot 1.1 - the averaged activity over days in tone-evoked period, c and s
 figure; hold on;tempX =[];
-for i = 1:3
+for i = 1:length(filenameList)
     spikeFlat(:,i) = reshape(spikeMean(:,:,i),1,[]) ; 
     cFlat(:,i) = reshape(cMean(:,:,i),1,[]) ;
 end
-for i = 1:3
+for i = 1:length(filenameList)
     [N,edges,bin] = histcounts(cFlat(:,i),linspace(0,prctile(cFlat(:,i),98),21));
     for j = 1:20 
         tempX(j,i) = mean(edges(j:j+1));
         tempMean(j,i) = mean(spikeFlat(bin==j,i)); tempSEM(j,i) = std(spikeFlat(bin==j,i))/sqrt(N(j));      
     end
 end
-for i = 1:3; plot(tempX(:,i),tempMean(:,i),'Color',matlabColors(i)); end
-for i = 1:3
+for i = 1:length(filenameList); plot(tempX(:,i),tempMean(:,i),'Color',matlabColors(i)); end
+for i = 1:length(filenameList)
     f = fillErrorbarPlot(tempX(:,i)',tempMean(:,i)', tempSEM(:,i)',matlabColors(i),'LineStyle','none');
     f.FaceAlpha = 0.1;
     scatter(cFlat(:,i)',spikeFlat(:,i),5,matlabColors(i), 'filled' , 'o', 'MarkerFaceAlpha', 0.1); 
@@ -69,7 +70,7 @@ legend(shortFilename{:},'Location','Best');
 title('Tone-evoked activity')
 %% plot 1.2 - the averaged activity over days in tone-evoked period
 figure; 
-for j = 1:3; subplot_tight(1,3,j,[0.15,0.06]);hold on; title(shortFilename{j})
+for j = 1:length(filenameList); subplot_tight(1,length(filenameList),j,[0.15,0.06]);hold on; title(shortFilename{j})
 for i= 1:7   
     scatter(dffMean(:,i)',reshape(spikeMean(:,i,j),1,[]),...
         5, 'filled' , 'o','MarkerFaceAlpha', 0.4);
@@ -97,10 +98,11 @@ for i = 1:length(alls)
     subplot(1,2,2); plot(ISIcountAvg); hold on;
 end
 subplot(1,2,1); title('spike count distribution'); legend(shortFilename{:},'Location','Best');
-
+subplot(1,2,2); title('spike ISI distribution'); legend(shortFilename{:},'Location','Best');
 %% plot 3 - the averaged activity over days in tone-evoked period
-corrFlat = [];
+corrFlat = [];allsFlat = [];
 for i = 1:length(alls)
+    allsFlat(:,i) = alls{i}(:);
     for j = 1:length(day)
         corrMat = corr(alls{i}(:,:,j)');
         upperTriFlag = triu(ones(size(corrMat)),1);
@@ -109,23 +111,32 @@ for i = 1:length(alls)
 end
 corrFlat(sum(sum(isnan(corrFlat),2),3)>0,:,:) = [];
 corrCorr = []; for j = 1:length(day); corrCorr(:,:,j) = corr(corrFlat(:,:,j)); end
-figure; imagesc(mean(corrCorr,3)); colorbar;% caxis([0 1]);
+totalCorr = corr(allsFlat);
+figure; subplot(1,2,1);imagesc(totalCorr); colorbar;
+title('correlation of spike activity between different methods')
+xticks(1:length(alls))
+xticklabels(shortFilename)
+subplot(1,2,2);imagesc(mean(corrCorr,3)); colorbar;% caxis([0 1]);
 title('correlation of correlation coefficients between different methods')
 xticks(1:length(alls))
 xticklabels(shortFilename)
 %% plot 4 - save examples of every cells
+
 if plotNeuron
     selectFrame = 1:2000; selectDay=1;
     for i = 1:size(alls{1},1)
+        bsum = 0;
+        for j = 1:length(filenameList); load([datapath '\' filenameList{1}],'p');
+            bsum = bsum + p{selectDay,i}.b; end
         figdays = figure('visible','off');
         set(figdays, 'Units', 'Normalized', 'OuterPosition', [0.15, 0.04, 0.85, 0.96]);
-        subplot_tight(4,1,1);
+        subplot_tight(length(filenameList)+1,1,1);
         plot(selectDff{selectDay}(i,selectFrame)); hold on; 
-        plot(zeros(1,length(selectFrame)),'Color',[0.8 0.8 0.8], 'LineWidth',2); title('dff')
+        plot(ones(1,length(selectFrame))*bsum/length(filenameList),'Color',[0.8 0.8 0.8], 'LineWidth',2); title('dff')
         %tempTitles = {'foopsi','constrained foopsi', 'thresholded'};
-        for j = 1:3
-            subplot_tight(4,1,1+j); plot(alls{j}(i,selectFrame,selectDay))
-            if j~=3; set(gca,'xtick',[]); end ; title(shortFilename{j})
+        for j = 1:length(filenameList)
+            subplot_tight(length(filenameList)+1,1,1+j); plot(alls{j}(i,selectFrame,selectDay))
+            if j~=length(filenameList); set(gca,'xtick',[]); end ; title(shortFilename{j})
         end
         saveas(figdays,[ 'cell' int2str(i) '.png']);
         close (figdays);
