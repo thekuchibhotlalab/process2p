@@ -3,52 +3,52 @@ clear;
 mouse = 'cd017';
 load(['C:\Users\zzhu34\Documents\tempdata\excitData\' mouse '\TC\' mouse '_TC_plane0.mat'],'tempTC');
 configPath = 'C:\Users\zzhu34\Documents\tempdata\excitData\config\mouse\';
-datapath = ['C:\Users\zzhu34\Documents\tempdata\deconv_test_' mouse '\ar1_allday_smooth3\'];
+datapath = ['C:\Users\zzhu34\Documents\tempdata\deconv_test_' mouse '\ar1_eachday_smooth3\'];
 mkdir(datapath);
-deconvolveAllDay(tempTC,mouse,configPath,datapath,1);
+deconvolveByDay(tempTC,mouse,configPath,datapath);
 %% load data
 clear;
 mouse = 'cd036';
 load(['C:\Users\zzhu34\Documents\tempdata\excitData\' mouse '\TC\' mouse '_TC_plane0.mat'],'tempTC');
 configPath = 'C:\Users\zzhu34\Documents\tempdata\excitData\config\mouse\';
-datapath = ['C:\Users\zzhu34\Documents\tempdata\deconv_test_' mouse '\ar1_allday_smooth3\'];
+datapath = ['C:\Users\zzhu34\Documents\tempdata\deconv_test_' mouse '\ar1_eachday_smooth3\'];
 mkdir(datapath);
-deconvolveAllDay(tempTC,mouse,configPath,datapath,1);
+deconvolveByDay(tempTC,mouse,configPath,datapath);
 %% load data
 clear;
 mouse = 'cd037';
 load(['C:\Users\zzhu34\Documents\tempdata\excitData\' mouse '\TC\' mouse '_TC_plane0_final.mat'],'TC');
 configPath = 'C:\Users\zzhu34\Documents\tempdata\excitData\config\mouse\';
-datapath = ['C:\Users\zzhu34\Documents\tempdata\deconv_test_' mouse '\ar1_allday_smooth3\'];
+datapath = ['C:\Users\zzhu34\Documents\tempdata\deconv_test_' mouse '\ar1_eachday_smooth3\'];
 mkdir(datapath);
-deconvolveAllDay(TC,mouse,configPath,datapath,1); %deconvolveMaster(TC,nFrames,mouse,datapath)
+deconvolveByDay(TC,mouse,configPath,datapath); %deconvolveMaster(TC,nFrames,mouse,datapath)
 
 %% load data
 clear;
 mouse = 'cd041';
 load(['C:\Users\zzhu34\Documents\tempdata\excitData\' mouse '\TC\' mouse '_TC_plane0.mat'],'tempTC');
 configPath = 'C:\Users\zzhu34\Documents\tempdata\excitData\config\mouse\';
-datapath = ['C:\Users\zzhu34\Documents\tempdata\deconv_test_' mouse '\ar1_allday_smooth3\'];
+datapath = ['C:\Users\zzhu34\Documents\tempdata\deconv_test_' mouse '\ar1_eachday_smooth3\'];
 mkdir(datapath);
-deconvolveAllDay(tempTC,mouse,configPath,datapath,1);
+deconvolveByDay(tempTC,mouse,configPath,datapath);
 
 %% load data
 clear;
 mouse = 'cd042';
 load(['C:\Users\zzhu34\Documents\tempdata\excitData\' mouse '\TC\' mouse '_TC_plane0_final.mat'],'TC');
 configPath = 'C:\Users\zzhu34\Documents\tempdata\excitData\config\mouse\';
-datapath = ['C:\Users\zzhu34\Documents\tempdata\deconv_test_' mouse '\ar1_allday_smooth3\'];
+datapath = ['C:\Users\zzhu34\Documents\tempdata\deconv_test_' mouse '\ar1_eachday_smooth3\'];
 mkdir(datapath);
-deconvolveAllDay(TC,mouse,configPath,datapath,1);
+deconvolveByDay(TC,mouse,configPath,datapath);
 
 %% load data
 clear;
 mouse = 'cd044';
 load(['C:\Users\zzhu34\Documents\tempdata\excitData\' mouse '\TC\' mouse '_TC_plane0_final.mat'],'TC');
 configPath = 'C:\Users\zzhu34\Documents\tempdata\excitData\config\mouse\';
-datapath = ['C:\Users\zzhu34\Documents\tempdata\deconv_test_' mouse '\ar1_allday_smooth3\'];
+datapath = ['C:\Users\zzhu34\Documents\tempdata\deconv_test_' mouse '\ar1_eachday_smooth3\'];
 mkdir(datapath);
-deconvolveAllDay(TC,mouse,configPath,datapath,1);
+deconvolveByDay(TC,mouse,configPath,datapath);
 
 
 %% all functions
@@ -95,7 +95,6 @@ end
 % estimate time constant for each neuron separately
 for j = 1:size(sessionTCAll,1)
     y = reshape(sessionTCAll(j,:), [], 1); 
-    y = smoothdata(y,'movmean',3);
     pars(j,:) = estimate_time_constant(y, 1, GetSn(y));
 end
 
@@ -116,7 +115,7 @@ nFrames = [0 0; nFrames];
 configTable =  readtable([configpath '\' mouse '_config.csv']);
 % Get Dff of each session
 for i = 1:size(nFrames,1)-1
-    sessionTC = TC(:,nFrames(i)+1:nFrames(i+1),1);
+    sessionTC = TC(:,nFrames(i,1)+1:nFrames(i+1,1));
     tempSessionDff = (sessionTC - repmat(median(sessionTC,2),1,size(sessionTC,2))) ./ repmat(median(sessionTC,2),1,size(sessionTC,2));
     tempSessionDff = tempSessionDff - smoothdata(tempSessionDff,2,'movmedian',3000);
     tempSessionDff(isnan(tempSessionDff)) = 0;
@@ -138,7 +137,8 @@ for i = nDays'
     % estimate time constant for each neuron separately
     for j = 1:size(sessionTC,1)
         y = reshape(sessionTC(j,:), [], 1); 
-        tempPars(j,:) = estimate_time_constant(y, 2, GetSn(y));
+        y = smoothdata(y,'movmean',3);
+        tempPars(j,:) = estimate_time_constant(y, 1, GetSn(y));
     end
     pars{count} = tempPars;
     sessionTCCell = sessionDff(sessionNum);

@@ -15,10 +15,10 @@ if smoothWindow ~= 0; TC = smoothdata(TC,1,'gaussian',smoothWindow); end
 if ~exist('testByPeak','var'); testByPeak = true; end
 TCpretone = circshift(TC,pretoneFrames,1);
 %---------COMPUTE DFF-----------
-baseline = prctile(TC,50,1);
-baseline = mean(TC,1);
-TC = TC ./ repmat(baseline,[size(TC,1) 1]);
-TCpretone = TCpretone ./ repmat(baseline,[size(TC,1) 1]);
+%baseline = prctile(TC,50,1);
+%baseline = mean(TC,1);
+%TC = TC ./ repmat(baseline,[size(TC,1) 1]);
+%TCpretone = TCpretone ./ repmat(baseline,[size(TC,1) 1]);
 %---------RESHAPE TC AND PRETONE-----------
 TC=reshape(TC,nFramesPerTone,nTones,nTrials,nNeuron); 
 TCpretone = reshape(TCpretone,nFramesPerTone,nTones,nTrials,nNeuron);

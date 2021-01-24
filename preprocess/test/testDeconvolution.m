@@ -1,6 +1,6 @@
 %% load data
 clear;
-parobj = parpool;
+%parobj = parpool;
 global tempTC ishere nFrames; 
 load('C:\Users\zzhu34\Documents\tempdata\excitData\cd036\TC\cd036_TC_plane0.mat','tempTC');
 load('C:\Users\zzhu34\Documents\tempdata\excitData\cd036\roi\ishere_plane0.mat','ishere');
@@ -129,29 +129,49 @@ save('behavior\cd036_calman_confoo_optb_nosmin.mat','c','s','p','day','selectNeu
 %% 4 - test the calmAn AR2 methods
 sessionSelected = [13 18 22 26 30 34 38]; day = 3:9;
 [selectDff, selectNeuron] = selectSession(sessionSelected,day);
-[c,s,p] = deconvolveDataCalmAn(selectDff,'foopsi',0.90,true);
-save('baseline\cd036_calman_ar2_foo90_optb.mat','c','s','p','day','selectNeuron');
-[c,s,p] = deconvolveDataCalmAn(selectDff,'foopsi',0.90,false);
-save('baseline\cd036_calman_ar2_foo90_optb_nosmin.mat','c','s','p','day','selectNeuron');
+[c,s,p] = deconvolveDataCalmAn(selectDff,'confoo',[],true);
+save('baseline\cd036_calman_ar2_confoo_optb.mat','c','s','p','day','selectNeuron');
+[c,s,p] = deconvolveDataCalmAn(selectDff,'confoo',[],false);
+save('baseline\cd036_calman_ar2_confoo_optb_nosmin.mat','c','s','p','day','selectNeuron');
 
-[c,s,p] = deconvolveDataCalmAn(selectDff,'foopsi',0.95,true);
-save('baseline\cd036_calman_ar2_foo95_optb.mat','c','s','p','day','selectNeuron');
-[c,s,p] = deconvolveDataCalmAn(selectDff,'foopsi',0.95,false);
-save('baseline\cd036_calman_ar2_foo95_optb_nosmin.mat','c','s','p','day','selectNeuron');
+[c,s,p] = deconvolveDataCalmAn(selectDff,'foo',0.85,true);
+save('baseline\cd036_calman_ar2_foo85_optb_nosmin.mat','c','s','p','day','selectNeuron');
+[c,s,p] = deconvolveDataCalmAn(selectDff,'foo',0.8,false);
+save('baseline\cd036_calman_ar2_foo80_optb_nosmin.mat','c','s','p','day','selectNeuron');
+[c,s,p] = deconvolveDataCalmAn(selectDff,'foo',0.75,false);
+save('baseline\cd036_calman_ar2_foo75_optb_nosmin.mat','c','s','p','day','selectNeuron');
+[c,s,p] = deconvolveDataCalmAn(selectDff,'foo',0.70,false);
+save('baseline\cd036_calman_ar2_foo70_optb_nosmin.mat','c','s','p','day','selectNeuron');
+
+[c,s,p] = deconvolveDataCalmAn(selectDff,'thresholded',0.95,true);
+save('baseline\cd036_calman_ar2_thre95_optb.mat','c','s','p','day','selectNeuron');
+[c,s,p] = deconvolveDataCalmAn(selectDff,'thresholded',0.95,false);
+save('baseline\cd036_calman_ar2_thre95_optb_nosmin.mat','c','s','p','day','selectNeuron');
 
 
-% behavioral sessions
+%% behavioral sessions
 sessionSelected = [10 15 19 23 27 31 35];  day = 3:9;
 [selectDff, selectNeuron] = selectSession(sessionSelected,day);
-[c,s,p] = deconvolveDataCalmAn(selectDff,'foopsi',0.90,true);
-save('behavior\cd036_calman_ar2_foo90_optb.mat','c','s','p','day','selectNeuron');
-[c,s,p] = deconvolveDataCalmAn(selectDff,'foopsi',0.90,false);
-save('behavior\cd036_calman_ar2_foo90_optb_nosmin.mat','c','s','p','day','selectNeuron');
+[c,s,p] = deconvolveDataCalmAn(selectDff,'confoo',[],true);
+save('behavior\cd036_calman_ar2_confoo_optb.mat','c','s','p','day','selectNeuron');
+[c,s,p] = deconvolveDataCalmAn(selectDff,'confoo',[],false);
+save('behavior\cd036_calman_ar2_confoo_optb_nosmin.mat','c','s','p','day','selectNeuron');
 
-[c,s,p] = deconvolveDataCalmAn(selectDff,'foopsi',0.95,true);
-save('behavior\cd036_calm an_ar2_foo95_optb.mat','c','s','p','day','selectNeuron');
-[c,s,p] = deconvolveDataCalmAn(selectDff,'foopsi',0.95,false);
-save('behavior\cd036_calman_ar2_foo95_optb_nosmin.mat','c','s','p','day','selectNeuron');
+[c,s,p] = deconvolveDataCalmAn(selectDff,'foo',0.85,false);
+save('behavior\cd036_calman_ar2_foo85_optb_nosmin.mat','c','s','p','day','selectNeuron');
+[c,s,p] = deconvolveDataCalmAn(selectDff,'foo',0.8,false);
+save('behavior\cd036_calman_ar2_foo80_optb_nosmin.mat','c','s','p','day','selectNeuron');
+[c,s,p] = deconvolveDataCalmAn(selectDff,'foo',0.75,false);
+save('behavior\cd036_calman_ar2_foo75_optb_nosmin.mat','c','s','p','day','selectNeuron');
+[c,s,p] = deconvolveDataCalmAn(selectDff,'foo',0.70,false);
+save('behavior\cd036_calman_ar2_foo70_optb_nosmin.mat','c','s','p','day','selectNeuron');
+
+[c,s,p] = deconvolveDataCalmAn(selectDff,'thresholded',0.95,true);
+save('behavior\cd036_calman_ar2_thre95_optb.mat','c','s','p','day','selectNeuron');
+[c,s,p] = deconvolveDataCalmAn(selectDff,'thresholded',0.95,false);
+save('behavior\cd036_calman_ar2_thre95_optb_nosmin.mat','c','s','p','day','selectNeuron');
+
+
 
 %% stop parallel pooling
 delete(parobj)

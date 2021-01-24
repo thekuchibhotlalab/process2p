@@ -20,17 +20,17 @@ if iscell(filename) && length(filename) >1
 end
 
 %---------CHECK NUMBER OF CHANNELS-----------
-data = load([p.Results.sbxpath sep filename '.mat']); 
-infosbx = data.info;
-if isempty(infosbx.otparam)
-    check_nPlanes = 1;
-else
-    check_nPlanes = infosbx.otparam(3);
-end
-if check_nPlanes ~= nPlanes
-    disp('ERROR - nPlanes in the parameter not consistent with sbx file.')
-    pause;
-end
+%data = load([p.Results.sbxpath sep filename '.mat']); 
+%infosbx = data.info;
+%if isempty(infosbx.otparam)
+%    check_nPlanes = 1;
+%else
+%    check_nPlanes = infosbx.otparam(3);
+%end
+%if check_nPlanes ~= nPlanes
+%    disp('ERROR - nPlanes in the parameter not consistent with sbx file.')
+%    pause;
+%end
 
 %---------GET RELEVANT PARAMETERS-----------
 [nFuncChannel, functionalChannel, roiType] = func_getFuncChanRoiType(varargin{:});

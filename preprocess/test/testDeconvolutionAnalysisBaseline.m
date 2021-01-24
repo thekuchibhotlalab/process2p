@@ -1,8 +1,10 @@
 clear;
 datapath ='C:\Users\zzhu34\Documents\tempdata\deconv_test_cd036\smooth3000\baseline';
 %filenameList = {'cd036_confoo_smin.mat','cd036_foo_smin.mat','cd036_thre_smin.mat'};
-filenameList = {'cd036_calman_confoo_optb.mat','cd036_calman_foo90_optb_nosmin.mat',...
-    'cd036_calman_foo95_optb_nosmin.mat','cd036_calman_foo95_optb.mat','cd036_calman_foo99_optb.mat','cd036_calman_thre95_optb.mat'};
+%filenameList = {'cd036_calman_confoo_optb.mat','cd036_calman_foo90_optb_nosmin.mat',...
+%    'cd036_calman_foo95_optb_nosmin.mat','cd036_calman_foo95_optb.mat','cd036_calman_foo99_optb.mat','cd036_calman_thre95_optb.mat'};
+filenameList = {'cd036_calman_ar2_confoo_optb.mat','cd036_calman_ar2_foo90_optb_nosmin.mat','cd036_calman_foo90_optb_nosmin.mat',...
+    'cd036_calman_ar2_foo95_optb_nosmin.mat','cd036_calman_foo95_optb_nosmin.mat'};
 shortFilename = []; for i = 1:length(filenameList)
     shortFilename{i} = filenameList{i}(14:end-4); shortFilename{i}(strfind(shortFilename{i},'_'))=' ';end
 for i = 1:length(filenameList)
@@ -15,7 +17,7 @@ for i = 1:length(filenameList)
     end
 end
 
-plotNeuron = false;
+plotNeuron = true;
 
 load([datapath '\selectDff.mat'],'selectDff');
 disp('selected dff started!')

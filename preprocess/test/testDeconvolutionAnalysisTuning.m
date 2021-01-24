@@ -2,7 +2,7 @@
 clear;
 datapath = 'C:\Users\zzhu34\Documents\tempdata\deconv_test_cd036\allSessions\';
 
-load([datapath 'cd036_calman_ar2_foo95_optb_s.mat'],'s');
+load([datapath 'cd036_calman_ar2_foo95_optb_nosmin_s.mat'],'s');
 
 savePath = 'C:\Users\zzhu34\Documents\tempdata\deconv_test_cd036\allSessions\tuning\spk';
 sessionSpk = s{2}; sessionSpk = [nan(size(sessionSpk,1),1) sessionSpk];
@@ -37,7 +37,7 @@ getTuning_oneChannel_noPlot(sessionDff',savePath,'tuningParam');
 %% Data data for comparison
 clear;
 dff = load('C:\Users\zzhu34\Documents\tempdata\deconv_test_cd036\allSessions\tuning\dff\tuning_smooth3.mat');
-spk = load('C:\Users\zzhu34\Documents\tempdata\deconv_test_cd036\allSessions\tuning\spk\tuning_smooth0_window.mat');
+spk = load('C:\Users\zzhu34\Documents\tempdata\deconv_test_cd036\allSessions\tuning\spk\tuning_foo90_smooth0_window.mat');
 
 %% Plot significance results for all tones (best tones)
 respFlagSpk = spk.anovaPeakCorr(2,:)>0; respFlagDff = dff.anovaPeakCorr(2,:)>0;
@@ -53,6 +53,11 @@ plotAllFigures(spk, dff, respFlagSpk,respFlagDff,target);
 respFlagSpk = spk.anovaSignifToneCorr(foil,:)>0; respFlagDff = dff.anovaSignifToneCorr(foil,:)>0;
 plotAllFigures(spk, dff, respFlagSpk,respFlagDff,foil);
 
+%% plot the p values for significance test
+
+pTSpk = spk.ttestToneP(target,:); pTDff = dff.ttestToneP(target,:);
+figure; histogram(pTDff,0:0.01:0.2)
+hold on;histogram(pTSpk,0:0.01:0.2)
 %% Plot SI for target and foil 
 
 target = 8;%13454;
@@ -76,11 +81,11 @@ function plotAllFigures(spk, dff, respFlagSpk,respFlagDff,toneIdx)
             'title',{'responsive cells'});
         
     if ~allToneFlag
-        bothPSTH = squeeze(spk.trialMedian(:,toneIdx,bothFlag))';
-        dffPSTH = squeeze(spk.trialMedian(:,toneIdx,dffFlag))';
+        bothPSTH = squeeze(spk.trialMean(:,toneIdx,bothFlag))';
+        dffPSTH = squeeze(spk.trialMean(:,toneIdx,dffFlag))';
     else 
-        bothPSTH = squeeze(mean(spk.trialMedian(:,:,bothFlag),2))';
-        dffPSTH = squeeze(mean(spk.trialMedian(:,:,dffFlag),2))';
+        bothPSTH = squeeze(mean(spk.trialMean(:,:,bothFlag),2))';
+        dffPSTH = squeeze(mean(spk.trialMean(:,:,dffFlag),2))';
     end
     
     figure; 
@@ -104,21 +109,42 @@ function plotAllFigures(spk, dff, respFlagSpk,respFlagDff,toneIdx)
     title('ROC value distribution'); legend('spk-both','spk-dffonly','dff-both','dff-dffonly','Location','Best')
     xlabel('AUC value of ROC (measurement of signal-to-noise)');
 
+    if allToneFlag
+        dffTuning = squeeze(mean(dff.peakAct(:,:,respFlagDff),2));dffTuningAll = dffTuning(:); 
+        spkTuning = squeeze(mean(spk.peakAct(:,:,respFlagDff),2));spkTuningAll = spkTuning(:);
+        tempReg = [spkTuningAll ones(size(spkTuningAll))]; coeff = tempReg \ dffTuningAll; fitSpkTuning  = tempReg*coeff;
+        maxLim = max([dffTuningAll spkTuningAll]);minLim = min([dffTuningAll spkTuningAll]);
+        
+        dffTuningSignifTone = dffTuning; spkTuningSignifTone = spkTuning; respIndex = find(respFlagDff);
+        for i = respIndex
+            dffTuningSignifTone(~dff.anovaSignifToneCorr(:,i),i) = nan; 
+            spkTuningSignifTone(~dff.anovaSignifToneCorr(:,i),i) = nan;
+        end
+        dffTuningSignifTone = dffTuningSignifTone(:); spkTuningSignifTone = spkTuningSignifTone(:);
+        dffTuningSignifTone(isnan(dffTuningSignifTone)) = []; spkTuningSignifTone(isnan(spkTuningSignifTone)) = [];
+        tempReg = [spkTuningSignifTone ones(size(spkTuningSignifTone))]; coeff = tempReg \ dffTuningSignifTone; fitSpkTuningSignifTone  = tempReg*coeff;
+        figure; subplot(1,3,1);scatter(fitSpkTuningSignifTone,dffTuningSignifTone, 5,'filled');
+        hold on; plot([minLim maxLim],[minLim maxLim],...
+            'Color',[0.5 0.5 0.5],'LineWidth',2); xlabel('spk tuning (fitted)'); ylabel('dff tuning'); xlim([0 1]);ylim([0 1])
+        title(['Tuning (resp tones), spk and dff, corr=' num2str(corr(fitSpkTuningSignifTone,dffTuningSignifTone),'%.2f')]);
+        
+        subplot(1,3,2);scatter(fitSpkTuning,dffTuningAll, 5,'filled'); hold on; plot([minLim maxLim],[minLim maxLim],...
+            'Color',[0.5 0.5 0.5],'LineWidth',2); xlabel('spk tuning (fitted)'); ylabel('dff tuning'); xlim([0 1]);ylim([0 1])
+        title(['Tuning, spk and dff, corr=' num2str(corr(fitSpkTuning,dffTuningAll),'%.2f')]);
 
-
-
-    dffTuning = mean(dff.peakAct,2);dffTuning = dffTuning(:); spkTuning = mean(spk.peakAct,2);spkTuning = spkTuning(:);
-    tempReg = [spkTuning ones(size(spkTuning))]; coeff = tempReg \ dffTuning; fitSpkTuning  = tempReg*coeff;
-    maxLim = max([dffTuning spkTuning]);minLim = min([dffTuning spkTuning]);
-
-    figure; subplot(1,2,1);scatter(fitSpkTuning,dffTuning, 10,'filled'); hold on; plot([minLim maxLim],[minLim maxLim],...
-        'Color',[0.5 0.5 0.5],'LineWidth',2); xlabel('spk SI (fitted)'); ylabel('dff SI');
-    title(['Tuning, spk and dff, corr=' num2str(corr(fitSpkTuning,dffTuning),'%.2f')]);
-
-    dffRoc = dff.rocAuc(:); spkRoc = spk.rocAuc(:);
-    subplot(1,2,2);scatter(spkRoc,dffRoc, 10,'filled'); hold on; plot([minLim maxLim],[minLim maxLim],...
-        'Color',[0.5 0.5 0.5],'LineWidth',2); xlabel('spk ROC'); ylabel('dff ROC');title('Distribution of spk and dff SI');
-    title(['ROC, spk and dff, corr=' num2str(corr(spkRoc,dffRoc),'%.2f')]);
+        dffRoc = dff.rocAuc(:,respFlagDff); spkRoc = spk.rocAuc(:,respFlagDff);
+        subplot(1,3,3);scatter(spkRoc(:),dffRoc(:), 10,'filled'); hold on; plot([minLim maxLim],[minLim maxLim],...
+            'Color',[0.5 0.5 0.5],'LineWidth',2); xlabel('spk ROC'); ylabel('dff ROC');title('Distribution of spk and dff SI');
+        title(['ROC, spk and dff, corr=' num2str(corr(spkRoc(:),dffRoc(:)),'%.2f')]);xlim([0 1]);ylim([0 1])
+        
+        for i = 1:size(dffTuning,2);neuronCorr(i) = corr(dffTuning(:,i),spkTuning(:,i));end
+        figure;histogram(neuronCorr,50); xlabel('Tuning Corr');ylabel('Frequency')
+        
+        [~,dffBestFreq] = max(dffTuning); [~,spkBestFreq] = max(spkTuning); 
+        figure; histogram(spkBestFreq - dffBestFreq,-17:1:17);
+        xlabel('spk - dff'); title(['Difference in best freq. Mean Abs Diff = ' ...
+            num2str(mean(abs(spkBestFreq - dffBestFreq)),'%.1f')]);
+    end
 
 end
 
@@ -154,8 +180,8 @@ function plotSI(spk, dff, targIdx, foilIdx, respFlag)
 
     bin_deltaSI = [-1 -0.5:0.2:0.5 1]; bin_deltaSIAvg = (bin_deltaSI(1:end-1) + bin_deltaSI(2:end))/2;
     [N, edges, nbin] = histcounts(deltaSI(respFlag), bin_deltaSI);
-    spkPSTH = squeeze(spk.trialMedian(:,targIdx,respFlag))';
-    dffPSTH = squeeze(dff.trialMedian(:,targIdx,respFlag))';
+    spkPSTH = squeeze(spk.trialMean(:,targIdx,respFlag))';
+    dffPSTH = squeeze(dff.trialMean(:,targIdx,respFlag))';
     fn_figureWholeScreen(); timeBin = 6:30;
     for i = 1:length(N)
         tempIdx = (nbin==i); tempSpk = spkPSTH(tempIdx,timeBin);  tempDff = dffPSTH(tempIdx,timeBin); 
@@ -168,8 +194,8 @@ function plotSI(spk, dff, targIdx, foilIdx, respFlag)
         xlabel('frames(onset=5)')
     end
 
-    spkPSTH = squeeze(spk.trialMedian(:,foilIdx,:))';
-    dffPSTH = squeeze(dff.trialMedian(:,foilIdx,:))';
+    spkPSTH = squeeze(spk.trialMean(:,foilIdx,:))';
+    dffPSTH = squeeze(dff.trialMean(:,foilIdx,:))';
     fn_figureWholeScreen(); timeBin = 6:30;
     for i = 1:length(N)
         tempIdx = (nbin==i); tempSpk = spkPSTH(tempIdx,timeBin);  tempDff = dffPSTH(tempIdx,timeBin); 
@@ -273,7 +299,7 @@ function plotNeuronSummary(spk, dff,targIdx,foilIdx,savePath)
         if respFlagDffF(i); txtF = 'F-Resp'; else; txtF = 'F-NotResp'; end
         
         titleT = sprintf('\\color[rgb]{%f, %f, %f}%s', colorT{:},txtT);
-        titleF= sprintf('\\color[rgb]{%f, %f, %f}%s', colorF{:},txtF);
+        titleF = sprintf('\\color[rgb]{%f, %f, %f}%s', colorF{:},txtF);
         suptitle(['Neuron ' int2str(i)  ' ' titleT ' ' titleF]);
         saveas(f,[ savePath '/cell' int2str(i) '.png']);
         close(f);

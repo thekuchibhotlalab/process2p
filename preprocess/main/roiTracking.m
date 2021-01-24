@@ -325,6 +325,9 @@ for k=1:nDays
     traces_target{k} = mean(temp,3);
 end
 
+for k=1:nDays
+    avg_day{k} = enhancedImage(avg_day{k},[1 size(avg_day{k},1)],[1 size(avg_day{k},2)]);
+end
 
 for j=c:nCells  
     disp(['cell #' int2str(j)])
@@ -358,7 +361,7 @@ for j=c:nCells
     temp = [];
     for k = 1:nDays; temp = [temp traces_target{k}(j,:) traces_foil{k}(j,:)];end
     
-        for k=1:nDays
+    for k=1:nDays
         subplot_tight(5,nDays+2,nDays+2+allDay(k)+1,margins);hold on;
         plot(smoothdata(traces_target{k}(j,:),'gaussian',5),'g','linewidth',2);
         plot(smoothdata(traces_foil{k}(j,:),'gaussian',5),'r','linewidth',2);
@@ -403,11 +406,12 @@ for j=c:nCells
             marginFlag = 1;
         end
         % code for original image enhancement
-        localImg = uint16(avg_day{k}(ylimm(1)-extraMargin:ylimm(2)+extraMargin, xlimm(1)-extraMargin:xlimm(2)+extraMargin));
-        localImgList{k} = imadjust(adapthisteq(localImg, 'NBins', 256)); 
+        %localImg = uint16(avg_day{k}(ylimm(1)-extraMargin:ylimm(2)+extraMargin, xlimm(1)-extraMargin:xlimm(2)+extraMargin));
+        %localImgList{k} = imadjust(adapthisteq(localImg, 'NBins', 256)); 
         
         %localImgList{k} = avg_day{k}(ylimm(1)-extraMargin:ylimm(2)+extraMargin, xlimm(1)-extraMargin:xlimm(2)+extraMargin);
         %imagesc(imadjust(adapthisteq(localImg, 'NBins', 256),[0 1],[0 1],0.2)); 
+        localImgList{k} = avg_day{k}(ylimm(1)-extraMargin:ylimm(2)+extraMargin, xlimm(1)-extraMargin:xlimm(2)+extraMargin);
         imagesc(localImgList{k}); 
         xlim([extraMargin+1 xlimm(2)-xlimm(1)+extraMargin+1]);ylim([extraMargin+1 ylimm(2)-ylimm(1)+extraMargin+1]);
         axis off;
