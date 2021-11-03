@@ -28,17 +28,13 @@ switch p.Results.roiMethod
         roisCoord = cell(nFuncChannel,nPlanes);
         for i = 1:nFuncChannel
             for j = 1:nPlanes
-                roiName = [p.Results.datapath sep roiFile{i,j}];
-                tempRoi = ReadImageJROI(roiName);
-                roisCoord{i,j} = cell(1,length(tempRoi));
-                for k = 1:length(tempRoi) % number of neurons in this plane
+                %roiName = [p.Results.datapath sep roiFile{i,j}];
+                %tempRoi = ReadImageJROI(roiName);
+                %roisCoord{i,j} = cell(1,length(tempRoi));
+                %for k = 1:length(tempRoi) % number of neurons in this plane
                     % flip coord 1 and 2 here since roi mask flips x and y
-                    %xlen = 800; ylen = 600;
-                    %roiMask = roipoly(zeros(xlen,ylen),tempRoi{z}.mnCoordinates(:,2),...
-                    %    tempRoi{z}.mnCoordinates(:,1));   
-                    %[tempx, tempy] = find(roiMask);
-                    roisCoord{i,j}{k} = tempRoi{k}.mnCoordinates;
-                end
+                %    roisCoord{i,j}{k} = tempRoi{k}.mnCoordinates;
+                %end
             end
             
         end

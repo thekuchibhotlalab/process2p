@@ -1,54 +1,81 @@
 %% load data
+
 clear;
 mouse = 'cd017';
-load(['C:\Users\zzhu34\Documents\tempdata\excitData\' mouse '\TC\' mouse '_TC_plane0.mat'],'tempTC');
+load(['C:\Users\zzhu34\Documents\tempdata\excitData\' mouse '\TC\' mouse '_TC_plane1.mat'],'tempTC');
 configPath = 'C:\Users\zzhu34\Documents\tempdata\excitData\config\mouse\';
-datapath = ['C:\Users\zzhu34\Documents\tempdata\deconv_test_' mouse '\ar1_allday_smooth3\'];
+datapath = ['C:\Users\zzhu34\Documents\tempdata\deconv_test_' mouse '\ar1_allday_fixBadSession\'];
 mkdir(datapath);
-deconvolveAllDay(tempTC,mouse,configPath,datapath,1);
+excludeSession = [1 2 7 31 82];
+% otther sessions with a bit rehift-out problem: 44-48, 49(really bad), 50-61, 
+load('C:\Users\zzhu34\Documents\tempdata\excitData\cd017\roi\ishere_plane1.mat','ishere');ishere = ishere{1};
+deconvolveAllDay(tempTC,mouse,configPath,datapath,2,ishere,excludeSession);
+
 %% load data
+%
+clear;
+mouse = 'cd019';
+load(['C:\Users\zzhu34\Documents\tempdata\excitData\' mouse '\TC\' mouse '_TC_plane1_final.mat'],'TC');
+configPath = 'C:\Users\zzhu34\Documents\tempdata\excitData\config\mouse\';
+datapath = ['C:\Users\zzhu34\Documents\tempdata\deconv_test_' mouse '\ar1_allday_fixBadSession\'];
+mkdir(datapath);
+excludeSession = [59 61 84];
+% otther sessions with a bit rehift-out problem: 44-48, 49(really bad), 50-61, 
+load('C:\Users\zzhu34\Documents\tempdata\excitData\cd019\roi\ishere_plane1_final.mat','ishere');
+deconvolveAllDay(TC,mouse,configPath,datapath,2, ishere, excludeSession);
+
+%% load data
+
 clear;
 mouse = 'cd036';
-load(['C:\Users\zzhu34\Documents\tempdata\excitData\' mouse '\TC\' mouse '_TC_plane0.mat'],'tempTC');
+load(['C:\Users\zzhu34\Documents\tempdata\excitData\' mouse '\TC\' mouse '_TC_plane1.mat'],'tempTC');
 configPath = 'C:\Users\zzhu34\Documents\tempdata\excitData\config\mouse\';
-datapath = ['C:\Users\zzhu34\Documents\tempdata\deconv_test_' mouse '\ar1_allday_smooth3\'];
+datapath = ['C:\Users\zzhu34\Documents\tempdata\deconv_test_' mouse '\ar1_allday_fixBadSession\'];
 mkdir(datapath);
-deconvolveAllDay(tempTC,mouse,configPath,datapath,1);
+load('C:\Users\zzhu34\Documents\tempdata\excitData\cd036\roi\ishere_plane1.mat','ishere');ishere = ishere{1};
+deconvolveAllDay(tempTC,mouse,configPath,datapath,2,ishere);
+
 %% load data
 clear;
 mouse = 'cd037';
-load(['C:\Users\zzhu34\Documents\tempdata\excitData\' mouse '\TC\' mouse '_TC_plane0_final.mat'],'TC');
+excludeSession= [52]; % distortion issue
+load(['C:\Users\zzhu34\Documents\tempdata\excitData\' mouse '\TC\' mouse '_TC_plane1_final.mat'],'TC');
 configPath = 'C:\Users\zzhu34\Documents\tempdata\excitData\config\mouse\';
-datapath = ['C:\Users\zzhu34\Documents\tempdata\deconv_test_' mouse '\ar1_allday_smooth3\'];
+datapath = ['C:\Users\zzhu34\Documents\tempdata\deconv_test_' mouse '\ar1_allday_fixBadSession\'];
 mkdir(datapath);
-deconvolveAllDay(TC,mouse,configPath,datapath,1); %deconvolveMaster(TC,nFrames,mouse,datapath)
+load('C:\Users\zzhu34\Documents\tempdata\excitData\cd037\roi\ishere_plane1_final.mat','ishere');
+deconvolveAllDay(TC,mouse,configPath,datapath,2,ishere,excludeSession); %deconvolveMaster(TC,nFrames,mouse,datapath)
 
 %% load data
 clear;
 mouse = 'cd041';
-load(['C:\Users\zzhu34\Documents\tempdata\excitData\' mouse '\TC\' mouse '_TC_plane0.mat'],'tempTC');
+load(['C:\Users\zzhu34\Documents\tempdata\excitData\' mouse '\TC\' mouse '_TC_plane1_final.mat'],'TC');
 configPath = 'C:\Users\zzhu34\Documents\tempdata\excitData\config\mouse\';
-datapath = ['C:\Users\zzhu34\Documents\tempdata\deconv_test_' mouse '\ar1_allday_smooth3\'];
+datapath = ['C:\Users\zzhu34\Documents\tempdata\deconv_test_' mouse '\ar1_allday_fixBadSession\'];
 mkdir(datapath);
-deconvolveAllDay(tempTC,mouse,configPath,datapath,1);
+load('C:\Users\zzhu34\Documents\tempdata\excitData\cd041\roi\ishere_plane1_final.mat','ishere');
+deconvolveAllDay(TC,mouse,configPath,datapath,2,ishere);
 
 %% load data
 clear;
 mouse = 'cd042';
-load(['C:\Users\zzhu34\Documents\tempdata\excitData\' mouse '\TC\' mouse '_TC_plane0_final.mat'],'TC');
+load(['C:\Users\zzhu34\Documents\tempdata\excitData\' mouse '\TC\' mouse '_TC_plane1_final.mat'],'TC');
 configPath = 'C:\Users\zzhu34\Documents\tempdata\excitData\config\mouse\';
-datapath = ['C:\Users\zzhu34\Documents\tempdata\deconv_test_' mouse '\ar1_allday_smooth3\'];
+datapath = ['C:\Users\zzhu34\Documents\tempdata\deconv_test_' mouse '\ar1_allday_fixBadSession\'];
 mkdir(datapath);
-deconvolveAllDay(TC,mouse,configPath,datapath,1);
+load('C:\Users\zzhu34\Documents\tempdata\excitData\cd042\roi\ishere_plane1_final.mat','ishere');
+deconvolveAllDay(TC,mouse,configPath,datapath,2,ishere);
 
 %% load data
 clear;
 mouse = 'cd044';
-load(['C:\Users\zzhu34\Documents\tempdata\excitData\' mouse '\TC\' mouse '_TC_plane0_final.mat'],'TC');
+excludeSession= [3 6];
+load(['C:\Users\zzhu34\Documents\tempdata\excitData\' mouse '\TC\' mouse '_TC_plane1_final.mat'],'TC');
 configPath = 'C:\Users\zzhu34\Documents\tempdata\excitData\config\mouse\';
-datapath = ['C:\Users\zzhu34\Documents\tempdata\deconv_test_' mouse '\ar1_allday_smooth3\'];
+datapath = ['C:\Users\zzhu34\Documents\tempdata\deconv_test_' mouse '\ar1_allday_fixBadSession\'];
 mkdir(datapath);
-deconvolveAllDay(TC,mouse,configPath,datapath,1);
+load('C:\Users\zzhu34\Documents\tempdata\excitData\cd044\roi\ishere_plane1_final.mat','ishere');
+deconvolveAllDay(TC,mouse,configPath,datapath,2,ishere,excludeSession);
 
 
 %% all functions
@@ -70,7 +97,9 @@ save([datapath '\' mouse '_calman_ar2_foo95_optb_nosmin_p.mat'],'p');
 toc;
 end
 
-function deconvolveAllDay(TC,mouse,configpath,datapath,nPlane)
+function deconvolveAllDay(TC,mouse,configpath,datapath,nPlane,ishere,excludeSession)
+if nargin < 7; excludeSession = []; end
+if nargin < 6; ishere = []; end
 tic;
 % Parse Dff into each session
 [nFrames, ~] = func_readnFrames(mouse,'root',configpath);
@@ -81,30 +110,48 @@ sessionDff = cell(1,size(nFrames,1)-1);
 for i = 1:size(nFrames,1)-1
     sessionTC = TC(:,nFrames(i,nPlane)+1:nFrames(i+1,nPlane));
     tempSessionDff = (sessionTC - repmat(median(sessionTC,2),1,size(sessionTC,2))) ./ repmat(median(sessionTC,2),1,size(sessionTC,2));
-    tempSessionDff = tempSessionDff - smoothdata(tempSessionDff,2,'movmedian',3000);
+    tempSessionDff = tempSessionDff - smoothdata(tempSessionDff,2,'movmedian',1000);
     tempSessionDff(isnan(tempSessionDff)) = 0;
     sessionDff{i} = tempSessionDff;
     if nPlane == 1; sessionDff{i} =  sessionDff{i}(:,2:end); end
 end
 % Estimate Decay Parameter for all days
 sessionTCAll = zeros(size(TC)); pars = [];
-for i = 1:length(sessionDff)
-    sessionTCAll(:,nFrames(i,nPlane)+(1:size(sessionDff{i},2)) ) = sessionDff{i};
+
+for j = 1:size(sessionTCAll,1)
+    if ~isempty(ishere)
+        dayFlag = ishere(j,:);
+        excludeDay = find(dayFlag == 0); tempExclude = sum((configTable.Day == excludeDay-1), 2);
+        excludeSessionIshere = find(tempExclude == 1);
+    else; excludeSessionIshere = [];
+    end
+    for i = 1:length(sessionDff)
+        
+        if any(i==excludeSession) || any(i==excludeSessionIshere)
+            sessionTCAll(j,nFrames(i,nPlane)+(1:size(sessionDff{i},2)) ) = nan;   
+        else
+            sessionTCAll(j,nFrames(i,nPlane)+(1:size(sessionDff{i},2)) ) = sessionDff{i}(j,:);
+        end
+    end
 end
     
 % estimate time constant for each neuron separately
 for j = 1:size(sessionTCAll,1)
     y = reshape(sessionTCAll(j,:), [], 1); 
-    y = smoothdata(y,'movmean',3);
-    pars(j,:) = estimate_time_constant(y, 1, GetSn(y));
+    y(isnan(y)) = [];
+    if ~isempty(y)
+        pars(j,:) = estimate_time_constant(y, 1, GetSn(y));
+    else
+        pars(j,:) = 0;
+    end
 end
 
 [temps,tempc,tempp] = deconvolveDff(sessionDff,'pars',pars);
 s = temps; c = tempc; p = tempp;
 
-save([datapath '\' mouse '_calman_ar1_foo90_pars_allday_c.mat'],'c','-v7.3');
-save([datapath '\' mouse '_calman_ar1_foo90_pars_allday_s.mat'],'s','-v7.3');
-save([datapath '\' mouse '_calman_ar1_foo90_pars_allday_p.mat'],'p','pars');
+save([datapath '\' mouse '_calman_ar1_foo90_pars_allday_c_plane' int2str(nPlane-1) '.mat'],'c','-v7.3');
+save([datapath '\' mouse '_calman_ar1_foo90_pars_allday_s_plane' int2str(nPlane-1) '.mat'],'s','-v7.3');
+save([datapath '\' mouse '_calman_ar1_foo90_pars_allday_p_plane' int2str(nPlane-1) '.mat'],'p','pars');
 toc;
 end
 

@@ -5,6 +5,9 @@ function [s,c,p] = deconvolveDff(sessionDff,varargin)
 %   Each session shaped in nNeuronXframes. 
 %
 % Varargin --
+% 'pars': optinoal decay parameter of each neuron, shape of [nNeuron,1] for
+% dacay or [nNeuron,2] for both rise and decay. If given, shared between
+% all sessions.
 % 'fr': frame rate. default = 15.63.
 % 'decay_time': decay time (sec) is only used to set sparness parameter. 
 %   default = 0.7
@@ -16,7 +19,7 @@ function [s,c,p] = deconvolveDff(sessionDff,varargin)
 %
 % Output Arguments --
 % s: deconvolved spks. c: denoised calcium trace. p: parameters.
-% If input is cell/matric, output is corresponding cell/matrix. 
+% If input is cell/matrix, output is corresponding cell/matrix. 
 p = inputParser;
 p.KeepUnmatched = true;
 p.addParameter('pars', [])

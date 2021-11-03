@@ -18,17 +18,14 @@ else
     functionalChannel = {p.Results.functionalChannel};
 end
 nFrames_oneplane = p.Results.nFrames_oneplane_TC;
+nFrames_oneplane_cumsum = [zeros(1,nPlanes); cumsum(nFrames_oneplane,1)];
 nFrames_oneplane_select = nFrames_oneplane(logical(p.Results.filenameTCFlag),:);
-nFrames_oneplane_all = nFrames_oneplane;
 
-nFrames_oneplane_all = cumsum(nFrames_oneplane_all,1);
-nFrames_oneplane_all = [zeros(1,nPlanes);nFrames_oneplane_all];
 
 tcFileSplit = strsplit(p.Results.tcFile);
 tcFile = reshape(tcFileSplit,nFuncChannel,nPlanes);
-TC = cell(nFuncChannel,nPlanes);
+TC = cell(nFuncChannel,1); neuronEachPlane = cell(nFuncChannel,1);
 for i = 1:nFuncChannel
-    TC_thisPlane = cell(1,nPlanes);
     for j = 1:nPlanes
         tcName = [p.Results.datapath sep tcFile{i,j}];
         tempTC = load(tcName);
@@ -39,23 +36,21 @@ for i = 1:nFuncChannel
             disp('TC naming follows old convention')
         end
         
-        % if the target file is part of the TC, only extract that part
-        if ~all(p.Results.filenameTCFlag)
-            frameIndex_thisPlane = [];
-            fileIndex = find(p.Results.filenameTCFlag==1);
-            for k = fileIndex
-                frameIndex_thisPlane = [frameIndex_thisPlane ...
-                    (nFrames_oneplane_all(k,j)+1):nFrames_oneplane_all(k+1,j)]; 
-            end
-            tempTC = tempTC(:,frameIndex_thisPlane); 
+        
+        
+        fileIndex = find(p.Results.filenameTCFlag==1);
+        for k = 1:p.Results.nFiles
+            frameIndex_thisPlane = (nFrames_oneplane_cumsum(fileIndex(k),j)+1):nFrames_oneplane_cumsum(fileIndex(k)+1,j); 
+            TC_thisPlane{k,j} = tempTC(:,frameIndex_thisPlane);
         end
-        TC_thisPlane{j} = tempTC;
+
         neuronEachPlane{i}(j) = size(tempTC,1);
         disp(['Loading part of the TCfile. From ' int2str(min(frameIndex_thisPlane)) ' to '...
             int2str(max(frameIndex_thisPlane)) ' frames. Total ' int2str(length(frameIndex_thisPlane)) ' frames.']);
     end
-    TC_thisPlane = func_attachNanFrames(TC_thisPlane, nFrames_oneplane_select,varargin{:});
-    TC(i,:) = TC_thisPlane;
+    TC_thisPlane = func_attachNanFrames(TC_thisPlane);
+    TC{i} = TC_thisPlane;
 end
+if nFuncChannel == 1; TC = TC{1}; neuronEachPlane = neuronEachPlane{1}; end
 
 end

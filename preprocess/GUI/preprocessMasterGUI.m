@@ -22,7 +22,7 @@ function varargout = preprocessMasterGUI(varargin)
 
 % Edit the above text to modify the response to help preprocessMasterGUI
 
-% Last Modified by GUIDE v2.5 04-Jul-2020 13:39:50
+% Last Modified by GUIDE v2.5 28-Oct-2021 22:57:09
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -54,13 +54,13 @@ function preprocessMasterGUI_OpeningFcn(hObject, eventdata, handles, varargin)
 
 % Choose default command line output for preprocessMasterGUI
 handles.output = hObject;
-handles.sep = '\';
+% Initialize other parameters
+handles.fn1 = '';handles.fn2 = '';handles.fn3 = '';
 % Update handles structure
 guidata(hObject, handles);
 
 % UIWAIT makes preprocessMasterGUI wait for user response (see UIRESUME)
 % uiwait(handles.figure1);
-
 
 % --- Outputs from this function are returned to the command line.
 function varargout = preprocessMasterGUI_OutputFcn(hObject, eventdata, handles) 
@@ -71,6 +71,15 @@ function varargout = preprocessMasterGUI_OutputFcn(hObject, eventdata, handles)
 
 % Get default command line output from handles structure
 varargout{1} = handles.output;
+% Set function selection menu; detect main functions from preprocess/main folder
+guiDir = which('preprocessMasterGUI');guiDirSplit = strsplit(guiDir,filesep);
+paramFnDir = [strjoin(guiDirSplit(1:end-2),filesep) filesep 'param_function'];
+mainDir = [strjoin(guiDirSplit(1:end-2),filesep) filesep 'main']; mFile = dir([mainDir filesep '*.m']);
+if isempty(mFile); msgbox('WARNING -- NO MAIN FUNCTION DETECTED!'); end
+mFile = {mFile.name}'; mFile = cellfun(@(x)(x(1:end-2)),mFile,'UniformOutput',false);mFile=['none';mFile];
+handles.fnSelectionMenu.String = mFile;
+handles.mainDir = mainDir; handles.paramFnDir = paramFnDir;
+guidata(hObject,handles);
 
 % --- Executes on button press in preprocessStatusSetButton.
 function preprocessStatusSetButton_Callback(hObject, eventdata, handles)
@@ -80,13 +89,13 @@ function preprocessStatusSetButton_Callback(hObject, eventdata, handles)
 targetVariable = get(handles.preprocessStatusMenu,'String');
 targetVariable = targetVariable{get(handles.preprocessStatusMenu,'Value')};
 if ~strcmp(targetVariable, 'None')
-    configTable = get(handles.uitable1,'Data');
-    configTableColumnName = get(handles.uitable1,'ColumnName');
+    configTable = get(handles.mouseInfoTable,'Data');
+    configTableColumnName = get(handles.mouseInfoTable,'ColumnName');
     configTable = cell2table(configTable);
     configTable.Properties.VariableNames = configTableColumnName;
 
     configTable.(targetVariable) = ones(size(configTable,1),1);
-    set(handles.uitable1,'Data', table2cell(configTable));
+    set(handles.mouseInfoTable,'Data', table2cell(configTable));
 end
 
 % --- Executes on button press in loadAnimalConfigButton.
@@ -98,12 +107,12 @@ mouse = get(handles.editAnimal,'String');
 masterInfo = func_loadMasterConfig('Mouse',mouse,'Root',handles.configRoot);
 masterInfo = masterInfo.(mouse);
 %[csvname, csvpath] = uigetfile('*.csv');
-handles.sessionConfigName = [handles.configRoot handles.sep 'mouse' handles.sep masterInfo.sessionConfig];
-handles.imagingConfigName = [handles.configRoot handles.sep 'imaging' handles.sep masterInfo.imagingConfig];
-handles.behaviorConfigName = [handles.configRoot handles.sep 'behavior' handles.sep masterInfo.behaviorConfig];
+handles.sessionConfigName = [handles.configRoot filesep 'mouse' filesep masterInfo.sessionConfig];
+handles.imagingConfigName = [handles.configRoot filesep 'imaging' filesep masterInfo.imagingConfig];
+handles.behaviorConfigName = [handles.configRoot filesep 'behavior' filesep masterInfo.behaviorConfig];
 configTable = readtable(handles.sessionConfigName);
-set(handles.uitable1,'Data',table2cell(configTable));
-set(handles.uitable1,'ColumnName', configTable.Properties.VariableNames);
+set(handles.mouseInfoTable,'Data',table2cell(configTable));
+set(handles.mouseInfoTable,'ColumnName', configTable.Properties.VariableNames);
 handles.configTable = configTable;
 %handles.csvname = csvname;
 %handles.csvpath = csvpath;
@@ -134,20 +143,20 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 
-% --- Executes on selection change in listbox1.
-function listbox1_Callback(hObject, eventdata, handles)
-% hObject    handle to listbox1 (see GCBO)
+% --- Executes on selection change in fileListBox.
+function fileListBox_Callback(hObject, eventdata, handles)
+% hObject    handle to fileListBox (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 handles.listboxSelectedIndex = eventdata.Source.Value;
 guidata(hObject,handles);
-% Hints: contents = cellstr(get(hObject,'String')) returns listbox1 contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from listbox1
+% Hints: contents = cellstr(get(hObject,'String')) returns fileListBox contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from fileListBox
 
 
 % --- Executes during object creation, after setting all properties.
-function listbox1_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to listbox1 (see GCBO)
+function fileListBox_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to fileListBox (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
@@ -158,48 +167,25 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 
-% --- Executes on selection change in preprocessMenu.
-function preprocessMenu_Callback(hObject, eventdata, handles)
-% hObject    handle to preprocessMenu (see GCBO)
+% --- Executes on selection change in fnSelectionMenu.
+function fnSelectionMenu_Callback(hObject, eventdata, handles)
+% hObject    handle to fnSelectionMenu (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: contents = cellstr(get(hObject,'String')) returns preprocessMenu contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from preprocessMenu
+% Hints: contents = cellstr(get(hObject,'String')) returns fnSelectionMenu contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from fnSelectionMenu
 allOpt = get(hObject,'String');
 selectedOpt = allOpt{eventdata.Source.Value};
-%configTable = get(handles.uitable1,'Data');
-%configTableColumnName = get(handles.uitable1,'ColumnName');
-%onfigTable = cell2table(configTable);
-%configTable.Properties.VariableNames = configTableColumnName;
 configTable = getConfigTable(handles);
+% Load filenames for file selection 
+filenames = fn_fileListAutoSelect(configTable,selectedOpt);
 
-switch selectedOpt
-    case 'extractTC'
-        filenames = configTable.('ImagingFile');
-    case 'extractRedraw'
-        filenames = configTable.('ImagingFile');
-    case 'deconvolve'
-        filenames = configTable.('ImagingFile');
-    case 'roiTracking'
-        filenames = configTable.('ImagingFile');
-    case 'roiRevision'
-        filenames = configTable.('ImagingFile');
-    case 'roiRevisionPlot'
-        filenames = configTable.('ImagingFile');
-    case 'getTuning'
-        filenames = 'SelectFile';
-    case 'none'
-        filenames = 'SelectFile';
-    case 'saveMeanImg'
-        filenames = configTable.('ImagingFile');
-end
-
-set(handles.listbox1,'String',filenames);
+set(handles.fileListBox,'String',filenames);
 
 % --- Executes during object creation, after setting all properties.
-function preprocessMenu_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to preprocessMenu (see GCBO)
+function fnSelectionMenu_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to fnSelectionMenu (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
@@ -211,151 +197,57 @@ if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgr
 end
 
 function configTable = getConfigTable(handles)
-configTable = get(handles.uitable1,'Data');
-configTableColumnName = get(handles.uitable1,'ColumnName');
+configTable = get(handles.mouseInfoTable,'Data');
+configTableColumnName = get(handles.mouseInfoTable,'ColumnName');
 configTable = cell2table(configTable);
 configTable.Properties.VariableNames = configTableColumnName;
-    
 
 
-% --- Executes on button press in preprocessPreviewButton.
-function preprocessPreviewButton_Callback(hObject, eventdata, handles)
-% hObject    handle to preprocessPreviewButton (see GCBO)
+% --- Executes on button press in paramPreviewButton.
+%---------GET PARAMETERS SHARED BY ALL FUNCTIONS, IMAGING AND MOUSE CONFIG-----------
+function paramPreviewButton_Callback(hObject, eventdata, handles)
+% hObject    handle to paramPreviewButton (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-%---------GET PARAMETERS SHARED BY ALL FUNCTIONS, IMAGING AND MOUSE CONFIG-----------
+
+% LOAD config table
 configTable = getConfigTable(handles);
 configTable = func_fillMissingTable(configTable);
+% READ and check filenames
+filenames = get(handles.fileListBox,'String');if ~iscell(filenames);filenames = {filenames};end
+filenameIdx = cellfun(@(x)(find(strcmp(configTable.ImagingFile,x))),filenames);
+fn_paramPreviewFileNumCheck(handles,filenames);
 
 % add the imaging configuration into parameters
-imagingConfigDisplay = func_loadImagingConfig(handles.imagingConfigName,'Split', false);
-imagingConfig = func_loadImagingConfig(handles.imagingConfigName,'Split', true);
-paramValueDisplay = {};
 paramValue = {};
-param = [fieldnames(handles.masterInfo); fieldnames(imagingConfig)];
-temp = fieldnames(handles.masterInfo);
-for i = 1:length(temp)
-    paramValue = [paramValue;temp{i};handles.masterInfo.(temp{i})];
-    paramValueDisplay = [paramValueDisplay; handles.masterInfo.(temp{i})];
-end
-temp = fieldnames(imagingConfig);
-tempDisplay = fieldnames(imagingConfigDisplay);
-for i = 1:length(temp)
-    paramValue = [paramValue;temp{i};{imagingConfig.(temp{i})}];
-    paramValueDisplay = [paramValueDisplay; {imagingConfigDisplay.(tempDisplay{i})}];
-end
 
-allStr = get(handles.preprocessMenu,'String');
-currStr = allStr{get(handles.preprocessMenu,'Value')};
+tempFieldName = fieldnames(handles.masterInfo);
+for i = 1:length(fieldnames(handles.masterInfo)); paramValue = [paramValue;tempFieldName{i};handles.masterInfo.(tempFieldName{i})];end %#ok<*AGROW>
 
-
-% get the filename selected, and the table of information
-filenames = get(handles.listbox1,'String');if ~iscell(filenames);filenames = {filenames};end
-filenameFlag = strcmp(configTable.ImagingFile,filenames);
-
-
-binSelected = configTable.suite2ppath(filenameFlag);
-%if length(tcFileSelected)>1 && ~isequal(tcFileSelected{:}); disp('ERROR: Selected files does not have same tcFile!'); end
-binSelected_removeNone = binSelected(~strcmp(binSelected,'None'));
-[~,~,j]=unique(binSelected_removeNone);
-binCommon = binSelected_removeNone{mode(j)}; % get all tcfile name of selected files
-% get all the imaging files with same tcFile name with selected filenames
-filename_binFlagCommon = strcmp(configTable.suite2ppath,binCommon);
-% nFrames_oneplane_load is used to load TC file corresponding to selected files 
-nFrames_oneplane_binStr = configTable.nFrames_oneplane(filename_binFlagCommon);
-% filename_loadFlag is used to identify where selected files 
-filename_binFlag = filename_binFlagCommon; filename_binFlag(~filenameFlag) = 0; filename_binFlag = filename_binFlag(filename_binFlagCommon);
-
-if ~iscell(nFrames_oneplane_binStr); nFrames_oneplane_binStr = {nFrames_oneplane_binStr}; end
-for i = 1:length(nFrames_oneplane_binStr)
-    nFrames_oneplane_binStrSplit = strsplit(nFrames_oneplane_binStr{i});
-    for j = 1:str2double(imagingConfig.nPlanes)
-        nFrames_oneplane_bin(i,j) = str2double(nFrames_oneplane_binStrSplit{j});
-    end
-end
-
-filename_bin = configTable.ImagingFile(filename_binFlag);
-paramValue = [paramValue;'filenameBin';strjoin(filename_bin);'filenameBinFlag';filename_binFlag;'nFrames_oneplane_bin';nFrames_oneplane_bin];
-
-
-tcFileSelected = configTable.tcFile(filenameFlag);
-tcFileSelected_removeNone = tcFileSelected(~strcmp(tcFileSelected,'None'));
-[~,~,j]=unique(tcFileSelected_removeNone);
-tcFilenameCommon = tcFileSelected{mode(j)}; % get all tcfile name of selected files
-% get all the imaging files with same tcFile name with selected filenames
-filename_TCFlag = strcmp(configTable.tcFile,tcFilenameCommon);
-% nFrames_oneplane_load is used to load TC file corresponding to selected files 
-nFrames_oneplane_loadStr = configTable.nFrames_oneplane(filename_TCFlag);
-% filename_loadFlag is used to identify where selected files 
-filename_loadFlag = filename_TCFlag; filename_loadFlag(~filenameFlag) = 0; filename_loadFlag = filename_loadFlag(filename_TCFlag);
-
-if ~iscell(nFrames_oneplane_loadStr); nFrames_oneplane_loadStr = {nFrames_oneplane_loadStr}; end
-for i = 1:length(nFrames_oneplane_loadStr)
-    nFrames_oneplane_loadStrSplit = strsplit(nFrames_oneplane_loadStr{i});
-    for j = 1:str2double(imagingConfig.nPlanes)
-        nFrames_oneplane_load(i,j) = str2double(nFrames_oneplane_loadStrSplit{j});
-    end
-end
-
-filename_TC = configTable.ImagingFile(filename_TCFlag);
-paramValue = [paramValue;'filenameTC';strjoin(filename_TC);'filenameTCFlag';filename_loadFlag;'nFrames_oneplane_TC';nFrames_oneplane_load];
+imagingConfig = func_loadImagingConfig(handles.imagingConfigName,'Split', true);
+tempFieldName = fieldnames(imagingConfig);
+for i = 1:length(tempFieldName); paramValue = [paramValue;tempFieldName{i};{imagingConfig.(tempFieldName{i})}]; end
 
 % save the root and savepath parameters
-param = [param;'root';'savepath'];paramValueDisplay = [paramValueDisplay;handles.configRoot; handles.savePath];
-paramValue = [paramValue;'filename';strjoin(filenames);'root';handles.configRoot;'savepath'; handles.savePath];
+paramValue = [paramValue;'root';handles.configRoot;'savepath'; handles.savePath];
+paramValueDisplay = cellfun(@(x)(fn_cellStrJoin(x)),paramValue,'UniformOutput',false);
+
+% get the filename selected, and the table of information
+paramValue = [paramValue;'filename';strjoin(filenames);'filenameIdx';filenameIdx;'nFiles';length(filenames)];
+[tempFilenameFlag,filenameFrames] = fn_paramPreviewFileSameFlag(configTable,filenames,imagingConfig,'tcFile');
+paramValue = [paramValue;'filenameTCFlag';tempFilenameFlag;'nFrames_oneplane_TC';filenameFrames];
+%paramValue = [paramValue;'filenameTC';strjoin(filenameSel);'filenameTCFlag';tempFilenameFlag;'nFrames_oneplane_TC';filenameFrames];
+[tempFilenameFlag,filenameFrames] = fn_paramPreviewFileSameFlag(configTable,filenames,imagingConfig,'suite2ppath');
+paramValue = [paramValue;'filenameBinFlag';tempFilenameFlag;'nFrames_oneplane_bin';filenameFrames];
+%paramValue = [paramValue;'filenameBin';strjoin(filenameSel);'filenameBinFlag';tempFilenameFlag;'nFrames_oneplane_bin';filenameFrames];
+
 % get all the path and files needed
-varNames = configTable.Properties.VariableNames;
-for i = 1:length(varNames)
-    tempParam = configTable.(varNames{i})(filenameFlag);
-    
-    if strcmp(varNames{i},'nFrames_oneplane')
-        saveParam = [];
-        if ~iscell(tempParam); tempParam = {tempParam}; end
-        for k = 1:length(tempParam)
-            nFrames_oneplaneSplit = strsplit(tempParam{k});
-            for j = 1:str2double(imagingConfig.nPlanes)
-                saveParam(k,j) = str2double(nFrames_oneplaneSplit{j});
-            end
-        end  
-    else
-        saveParam = tempParam;
-    end
-    
-    if iscell(saveParam) && length(saveParam) > 1
-        
-        if isequal(saveParam{:}); saveParam = saveParam{1};
-        else;saveParam = strjoin(saveParam);
-            if ~strcmp(varNames{i},'BehavFile') && ~strcmp(varNames{i},'ImagingFile') && ~strcmp(varNames{i},'BehavType') 
-                disp(['WARNING: Not all files have same ' varNames{i} '!'])
-            end
-        end
-    elseif isnumeric(saveParam)
-        saveParam = {saveParam};
-    end
-    paramValue = [paramValue;varNames{i};saveParam];
+paramValue = fn_paramPreviewAddTableParam(configTable,filenameIdx,paramValue,imagingConfig);
 
-    displayString = {'sbxpath';'h5path';'suite2ppath';'root';'savepath';'datapath';'behavpath'};
-    if any(contains(displayString,varNames{i}))
-        param = [param;varNames{i}];paramValueDisplay = [paramValueDisplay;saveParam];
-    end
-end
-
-switch currStr
-    case 'getTuning'
-        if length(filenames) ~=1 
-            disp('ERROR: Please select only one file');
-        end
-        filename = filenames{1};
-    case 'extractTC'   
-    case 'extractRedraw'    
-    case 'roiTracking'
-    case 'roiRevision'        
-    case 'saveMeanImg'      
-end
 % display parameters and save it to the handle
-paramTableDisplay = table(param,paramValueDisplay,'VariableNames',{'name','value'});
-set(handles.uitable2,'Data',table2cell(paramTableDisplay));
-set(handles.uitable2,'ColumnName', paramTableDisplay.Properties.VariableNames);
+paramTableDisplay = table(paramValueDisplay(1:2:end),paramValueDisplay(2:2:end),'VariableNames',{'name','value'});
+set(handles.paramPreviewTable,'Data',table2cell(paramTableDisplay));
+set(handles.paramPreviewTable,'ColumnName', paramTableDisplay.Properties.VariableNames);
 handles.param = paramValue; 
 guidata(hObject,handles);
 
@@ -364,11 +256,11 @@ function fileAddButton_Callback(hObject, eventdata, handles)
 % hObject    handle to fileAddButton (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-listBoxStr = get(handles.listbox1,'String');
+listBoxStr = get(handles.fileListBox,'String');
 if ischar(listBoxStr)
     listBoxStr = {listBoxStr};
 end
-configTable = get(handles.uitable1,'Data');
+configTable = get(handles.mouseInfoTable,'Data');
 for i = 1:size(handles.uitableSelectedIndex,1)
     tempFilename = configTable{handles.uitableSelectedIndex(i,1), handles.uitableSelectedIndex(i,2)};
     if ~any(strcmp(listBoxStr, tempFilename))
@@ -378,18 +270,18 @@ end
 %if strcmp(listBoxStr,'SelectFile') || strcmp(listBoxStr{1},'SelectFile')
 listBoxStr(strcmp(listBoxStr,'SelectFile')) = [];
 %end
-set(handles.listbox1,'String',listBoxStr);
+set(handles.fileListBox,'String',listBoxStr);
 
 % --- Executes on button press in fileDropButton.
 function fileDropButton_Callback(hObject, eventdata, handles)
 % hObject    handle to fileDropButton (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-listBoxStr = get(handles.listbox1,'String');
+listBoxStr = get(handles.fileListBox,'String');
 if ischar(listBoxStr)
    listBoxStr = {listBoxStr}; 
 end
-selectBoxStr = listBoxStr(get(handles.listbox1,'Value'));
+selectBoxStr = listBoxStr(get(handles.fileListBox,'Value'));
 
 if length(listBoxStr) >2
     listBoxStr(strcmp(selectBoxStr,listBoxStr)) = [];
@@ -404,7 +296,7 @@ else
     disp('CHECK THIS!!!')
 end
 
-set(handles.listbox1,'String',listBoxStr);
+set(handles.fileListBox,'String',listBoxStr);
 
 % --- Executes on button press in preprocessStatusClearButton.
 function preprocessStatusClearButton_Callback(hObject, eventdata, handles)
@@ -414,18 +306,18 @@ function preprocessStatusClearButton_Callback(hObject, eventdata, handles)
 targetVariable = get(handles.preprocessStatusMenu,'String');
 targetVariable = targetVariable{get(handles.preprocessStatusMenu,'Value')};
 if ~strcmp(targetVariable, 'None')
-    configTable = get(handles.uitable1,'Data');
-    configTableColumnName = get(handles.uitable1,'ColumnName');
+    configTable = get(handles.mouseInfoTable,'Data');
+    configTableColumnName = get(handles.mouseInfoTable,'ColumnName');
     configTable = cell2table(configTable);
     configTable.Properties.VariableNames = configTableColumnName;
 
     configTable.(targetVariable) = zeros(size(configTable,1),1);
-    set(handles.uitable1,'Data', table2cell(configTable));
+    set(handles.mouseInfoTable,'Data', table2cell(configTable));
 end
 
-% --- Executes when selected cell(s) is changed in uitable1.
-function uitable1_CellSelectionCallback(hObject, eventdata, handles)
-% hObject    handle to uitable1 (see GCBO)
+% --- Executes when selected cell(s) is changed in mouseInfoTable.
+function mouseInfoTable_CellSelectionCallback(hObject, eventdata, handles)
+% hObject    handle to mouseInfoTable (see GCBO)
 % eventdata  structure with the following fields (see MATLAB.UI.CONTROL.TABLE)
 %	Indices: row and column indices of the cell(s) currently selecteds
 % handles    structure with handles and user data (see GUIDATA)
@@ -434,9 +326,9 @@ guidata(hObject,handles);
 
 
 
-% --- Executes when entered data in editable cell(s) in uitable1.
-function uitable1_CellEditCallback(hObject, eventdata, handles)
-% hObject    handle to uitable1 (see GCBO)
+% --- Executes when entered data in editable cell(s) in mouseInfoTable.
+function mouseInfoTable_CellEditCallback(hObject, eventdata, handles)
+% hObject    handle to mouseInfoTable (see GCBO)
 % eventdata  structure with the following fields (see MATLAB.UI.CONTROL.TABLE)
 %	Indices: row and column indices of the cell(s) edited
 %	PreviousData: previous data for the cell(s) edited
@@ -452,9 +344,9 @@ function preprocessStatusEditButton_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 if hObject.Value==1
-    set(handles.uitable1,'ColumnEditable',true(1,length(get(handles.uitable1,'ColumnName'))));
+    set(handles.mouseInfoTable,'ColumnEditable',true(1,length(get(handles.mouseInfoTable,'ColumnName'))));
 else
-    set(handles.uitable1,'ColumnEditable',false(1,length(get(handles.uitable1,'ColumnName'))));
+    set(handles.mouseInfoTable,'ColumnEditable',false(1,length(get(handles.mouseInfoTable,'ColumnName'))));
 end
 guidata(hObject,handles);
 
@@ -463,21 +355,20 @@ function preprocessStatusSaveButton_Callback(hObject, eventdata, handles)
 % hObject    handle to preprocessStatusSaveButton (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-configTable = get(handles.uitable1,'Data');
-configTableColumnName = get(handles.uitable1,'ColumnName');
+configTable = get(handles.mouseInfoTable,'Data');
+configTableColumnName = get(handles.mouseInfoTable,'ColumnName');
 configTable = cell2table(configTable);
 configTable.Properties.VariableNames = configTableColumnName;
 writetable(configTable,handles.sessionConfigName);
 
-% --- Executes on key press with focus on listbox1 and none of its controls.
-function listbox1_KeyPressFcn(hObject, eventdata, handles)
-% hObject    handle to listbox1 (see GCBO)
+% --- Executes on key press with focus on fileListBox and none of its controls.
+function fileListBox_KeyPressFcn(hObject, eventdata, handles)
+% hObject    handle to fileListBox (see GCBO)
 % eventdata  structure with the following fields (see MATLAB.UI.CONTROL.UICONTROL)
 %	Key: name of the key that was pressed, in lower case
 %	Character: character interpretation of the key(s) that was pressed
 %	Modifier: name(s) of the modifier key(s) (i.e., control, shift) pressed
 % handles    structure with handles and user data (see GUIDATA)
-
 
 % --- Executes on button press in rootButton.
 function rootButton_Callback(hObject, eventdata, handles)
@@ -490,7 +381,6 @@ handles.configRoot = configRoot;
 handles.savePath = configRoot;
 guidata(hObject,handles);
 
-
 % --- Executes on button press in savePathButton.
 function savePathButton_Callback(hObject, eventdata, handles)
 % hObject    handle to savePathButton (see GCBO)
@@ -500,8 +390,6 @@ savePath = uigetdir(pwd);
 set(handles.savePathText,'String', savePath)
 handles.savePath = savePath;
 guidata(hObject,handles);
-
-
 
 function editAnimal_Callback(hObject, eventdata, handles)
 % hObject    handle to editAnimal (see GCBO)
@@ -533,65 +421,93 @@ function preprocessRunButton_Callback(hObject, eventdata, handles)
 
 % NOTE: CURRENTLY EDITING PARAM DOES NOT CHANGE PARAM THAT RUNS THE
 % PROGRAMS, NEED CHANGE IN THE FUTURE.
-allStr = get(handles.preprocessMenu,'String');
-currStr = allStr{get(handles.preprocessMenu,'Value')};
-switch currStr
-case 'getTuning'
-    getTuning(handles.param{:});
-case 'extractTC'
-    extractTC(handles.param{:});
-case 'extractRedraw'
-    extractRedraw(handles.param{:});
-case 'saveMeanImg'
-    getMeanImg(handles.param{:});
-case 'roiTracking'
-    roiTracking(handles.param{:});
-case 'roiRevision'
-    roiRevision(handles.param{:});
-case 'roiRevisionPlot'
-    roiRevisionPlot(handles.param{:});
-end
+currStr = getSelFnName(handles);
+param = handles.param;
+if ~isempty(handles.fn1); param = [param;'fn1';handles.fn1]; end
+if ~isempty(handles.fn2); param = [param;'fn2';handles.fn2]; end
+if ~isempty(handles.fn3); param = [param;'fn3';handles.fn3]; end
+feval(currStr,param{:});
 
-% --- Executes on button press in funcParam.
-function funcParam_Callback(hObject, eventdata, handles)
-% hObject    handle to funcParam (see GCBO)
+% --- If Enable == 'on', executes on mouse press in 5 pixel border.
+% --- Otherwise, executes on mouse press in 5 pixel border or over fnSelectionMenu.
+function fnSelectionMenu_ButtonDownFcn(hObject, eventdata, handles)
+% hObject    handle to fnSelectionMenu (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hint: get(hObject,'Value') returns toggle state of funcParam
-%if hObject.Value==1
-%    set(handles.uitable2,'ColumnEditable',true(1,length(get(handles.uitable2,'ColumnName'))));
-%else
-%    set(handles.uitable2,'ColumnEditable',false(1,length(get(handles.uitable2,'ColumnName'))));
-%end
-%guidata(hObject,handles);
+function x = fn_cellStrJoin(x)
+if iscell(x); x = strjoin(x);end
+
+% --- Executes on button press in fnButton1.
+function fnButton1_Callback(hObject, eventdata, handles)
+% hObject    handle to fnButton1 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of fnButton1
 paramValue = handles.param;
 if hObject.Value==1
-    [funcParam, funcParamPath] = uigetfile(handles.configRoot);
-    set(handles.funcParamText,'String', funcParam); addpath(funcParamPath);
-    tempSplit = strsplit(funcParam,'.');
-    funcParamIndex = find(strcmp(paramValue, 'funcParam'));
-    if isempty(funcParamIndex); paramValue = [paramValue; 'funcParam'; tempSplit{1}];
-    else; paramValue{funcParamIndex+1} = tempSplit{1};end
+    [funcParam, funcParamPath] = uigetfile(handles.paramFnDir);
+    addpath(funcParamPath);tempSplit = strsplit(funcParam,'.');
+    set(handles.fnButton1,'String', tempSplit{1}); handles.fn1 = tempSplit{1};
+    if length(tempSplit{1})>10; set(handles.fnButton1,'FontSize', 6.5); end
 else
-    funcParamIndex = find(strcmp(paramValue, 'funcParam'));
-    set(handles.funcParamText,'String', 'None');
-    if ~isempty(funcParamIndex);paramValue{funcParamIndex:funcParamIndex+1} = [];end
+    set(handles.fnButton1,'String', 'fn1');set(handles.fnButton1,'FontSize', 8.0);handles.fn1 = '';
 end
-handles.param = paramValue; 
 guidata(hObject,handles);
 
-% --- If Enable == 'on', executes on mouse press in 5 pixel border.
-% --- Otherwise, executes on mouse press in 5 pixel border or over preprocessMenu.
-function preprocessMenu_ButtonDownFcn(hObject, eventdata, handles)
-% hObject    handle to preprocessMenu (see GCBO)
+
+% --- Executes on button press in fnButton2.
+function fnButton2_Callback(hObject, eventdata, handles)
+% hObject    handle to fnButton2 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
+% Hint: get(hObject,'Value') returns toggle state of fnButton2
+paramValue = handles.param;
+if hObject.Value==1
+    [funcParam, funcParamPath] = uigetfile(handles.paramFnDir);
+    addpath(funcParamPath);tempSplit = strsplit(funcParam,'.');
+    set(handles.fnButton2,'String', tempSplit{1}); handles.fn2 = tempSplit{1};
+     if length(tempSplit{1})>10; set(handles.fnButton2,'FontSize', 6.5); end
+else
+    set(handles.fnButton2,'String', 'fn2');set(handles.fnButton2,'FontSize', 8.0);handles.fn2 = '';
+end
+guidata(hObject,handles);
 
-% --- If Enable == 'on', executes on mouse press in 5 pixel border.
-% --- Otherwise, executes on mouse press in 5 pixel border or over funcParam.
-function funcParam_ButtonDownFcn(hObject, eventdata, handles)
-% hObject    handle to funcParam (see GCBO)
+
+% --- Executes on button press in fnButton3.
+function fnButton3_Callback(hObject, eventdata, handles)
+% hObject    handle to fnButton3 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of fnButton3
+paramValue = handles.param;
+if hObject.Value==1
+    [funcParam, funcParamPath] = uigetfile(handles.paramFnDir);
+    addpath(funcParamPath);tempSplit = strsplit(funcParam,'.');
+    set(handles.fnButton3,'String', tempSplit{1}); handles.fn3 = tempSplit{1};
+    if length(tempSplit{1})>10; set(handles.fnButton3,'FontSize', 6.5); end
+else
+    set(handles.fnButton3,'String', 'fn3'); set(handles.fnButton3,'FontSize', 8.0); handles.fn3 = '';
+end
+guidata(hObject,handles);
+
+
+% --- Executes on button press in helpButton.
+function helpButton_Callback(hObject, eventdata, handles)
+% hObject    handle to helpButton (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of helpButton
+msg = help(getSelFnName(handles)); mbox = msgbox(msg);    
+msgboxFontSize(mbox,11,'FontName','Consolas');     
+
+
+function currStr = getSelFnName(handles)
+allStr = get(handles.fnSelectionMenu,'String');
+currStr = allStr{get(handles.fnSelectionMenu,'Value')};
+
+

@@ -2,7 +2,6 @@ function tcFilename = extractRedraw(varargin)
 
 p = func_createInputParser();
 p.parse(varargin{:});
-sep = '\';
 
 %---------GET RELEVANT PARAMETERS-----------
 global info
@@ -19,11 +18,11 @@ roiFile = p.Results.roiFile;
 nFrames_oneplane = p.Results.nFrames_oneplane;
 day = p.Results.day;
 
-TCpath = [datapath sep 'TC' sep];
+TCpath = [datapath filesep 'TC' filesep];
 if exist(TCpath,'dir')==0; mkdir(TCpath); end
 
 %---------CHECK NUMBER OF CHANNELS-----------
-data = load([p.Results.sbxpath sep filenames{1} '.mat']); 
+data = load([p.Results.sbxpath filesep filenames{1} '.mat']); 
 infosbx = data.info;
 if isempty(infosbx.otparam)
     check_nPlanes = 1;
@@ -39,7 +38,7 @@ end
 %---------LOAD ROI BASED ON ROI METHOD-----------
 switch p.Results.roiMethod
 case 'manual'
-    data = load([suite2ppath sep 'plane0' sep 'Fall.mat'] );
+    data = load([suite2ppath filesep 'plane0' filesep 'Fall.mat'] );
     ly = data.ops.Ly;
     lx = data.ops.Lx;
     [roisMask, roisCoord, neuronEachPlane] = func_loadRoi(varargin{:},'xlen',lx,'ylen',ly,'redrawFile',true);
@@ -53,7 +52,7 @@ switch p.Results.dataType
 case 'suite2p' % suite2p only support one functional channel!!!
     nFrames = nan(nFiles,1);%nFrames_add = nan(nFiles,1);
     for i=1:nFiles
-        sbxread([sbxpath sep filenames{i}],1,1);
+        sbxread([sbxpath filesep filenames{i}],1,1);
         nFrames(i) = info.max_idx; 
     end
 
@@ -62,7 +61,7 @@ case 'suite2p' % suite2p only support one functional channel!!!
         nFramesPlane = sum(nFrames_oneplane(:,i));
             
         %check if nb of frames per plane computed is true in suite2p files
-        data = load([suite2ppath sep 'plane' num2str(i-1) sep 'Fall.mat'] );
+        data = load([suite2ppath filesep 'plane' num2str(i-1) filesep 'Fall.mat'] );
         nFramesPlaneCheck = size(data.F,2);
         if nFramesPlaneCheck==nFramesPlane
             disp(['Correct nb of frame for plane ' num2str(i) '. Good to go!']);
@@ -71,9 +70,9 @@ case 'suite2p' % suite2p only support one functional channel!!!
         end
         for chan = 1:nFuncChannel
             if chan == 1
-                fileID = fopen([suite2ppath sep 'plane' num2str(i-1) sep 'data.bin'],'r'); % open binary file 
+                fileID = fopen([suite2ppath filesep 'plane' num2str(i-1) filesep 'data.bin'],'r'); % open binary file 
             else 
-                fileID = fopen([suite2ppath sep 'plane' num2str(i-1) sep 'data_chan' int2str(chan) '.bin'],'r'); % open binary file 
+                fileID = fopen([suite2ppath filesep 'plane' num2str(i-1) filesep 'data_chan' int2str(chan) '.bin'],'r'); % open binary file 
             end
             % get roi and preallocate resource
             rois = roisMask{chan,i};
@@ -109,14 +108,14 @@ case 'suite2p' % suite2p only support one functional channel!!!
             % save data. file name are different depending on # of channels
             if nFuncChannel>1
                 
-                save([TCpath sep mouse '_TC_plane' num2str(i-1) '_' functionalChannel{chan} '_final.mat'],'TC','-v7.3');
-                save([TCpath sep mouse '_neuroPil_plane' num2str(i-1) '_' functionalChannel{chan} '_final.mat'],'neuroPil','-v7.3');
-                tcFilename{chan,i} = ['TC' sep mouse '_TC_plane' num2str(i-1) '_' functionalChannel{chan} '_final.mat'];
+                save([TCpath filesep mouse '_TC_plane' num2str(i-1) '_' functionalChannel{chan} '_final.mat'],'TC','-v7.3');
+                save([TCpath filesep mouse '_neuroPil_plane' num2str(i-1) '_' functionalChannel{chan} '_final.mat'],'neuroPil','-v7.3');
+                tcFilename{chan,i} = ['TC' filesep mouse '_TC_plane' num2str(i-1) '_' functionalChannel{chan} '_final.mat'];
 
             else
-                save([TCpath sep mouse '_TC_plane' num2str(i-1) '_final.mat'],'TC','-v7.3');
-                save([TCpath sep mouse '_neuroPil_plane' num2str(i-1) '_final.mat'],'neuroPil','-v7.3');
-                tcFilename{1,i} = ['TC' sep mouse '_TC_plane' num2str(i-1) '_final.mat'];
+                save([TCpath filesep mouse '_TC_plane' num2str(i-1) '_final.mat'],'TC','-v7.3');
+                save([TCpath filesep mouse '_neuroPil_plane' num2str(i-1) '_final.mat'],'neuroPil','-v7.3');
+                tcFilename{1,i} = ['TC' filesep mouse '_TC_plane' num2str(i-1) '_final.mat'];
             end
             fclose all;
         end

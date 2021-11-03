@@ -1,4 +1,4 @@
-function getMeanImg(varargin)
+function saveMeanImg(varargin)
 
 p = func_createInputParser();
 p.parse(varargin{:});
@@ -97,16 +97,16 @@ for i=1:nPlanes
                     A = fread(fileID,ly*lx*to_read,'*int16');
                     A = reshape(A,lx,ly,[]);
                     avgA(:,:,a) = mean(A,3);
-                    topA1(:,:,a) = prctiile(A,70,3);
-                    topA2(:,:,a) = prctiile(A,85,3);
+                    topA1(:,:,a) = prctile(A,70,3);
+                    topA2(:,:,a) = prctile(A,85,3);
                     a=a+1;
                     k = k+to_read;
                     to_read = min(blksize,nimg-k);
                 end
                 % to check the bloc averages: 
                 avg_sessions{j,i,chan} = mean(avgA,3)';
-                top_sessions1{j,i,chan1} = prctile(topA1,75,3)';
-                top_sessions2{j,i,chan1} = prctile(topA2,75,3)';
+                top_sessions1{j,i,chan} = prctile(topA1,75,3)';
+                top_sessions2{j,i,chan} = prctile(topA2,75,3)';
             end
             if j ==1; tempTime = toc; disp(['Estim. time = ' num2str(tempTime*nFiles,'%.3f') ' secs.']); end 
         end   

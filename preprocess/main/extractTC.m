@@ -2,7 +2,6 @@ function tcFilename = extractTC(varargin)
 
 p = func_createInputParser();
 p.parse(varargin{:});
-sep = '\';
 
 %---------GET RELEVANT PARAMETERS-----------
 global info
@@ -24,7 +23,7 @@ neuropilMethod = p.Results.neuropilMethod;
 %nFrames_oneplane = cumsum(nFrames_oneplane);
 %nFrames_oneplane = [zeros(1,nPlanes);nFrames_oneplane];
 %---------CHECK NUMBER OF CHANNELS-----------
-data = load([p.Results.sbxpath sep filenames{1} '.mat']); 
+data = load([p.Results.sbxpath filesep filenames{1} '.mat']); 
 infosbx = data.info;
 if isempty(infosbx.otparam)
     check_nPlanes = 1;
@@ -40,7 +39,7 @@ end
 %---------LOAD ROI BASED ON ROI METHOD-----------
 switch p.Results.roiMethod
 case 'manual'
-    data = load([suite2ppath sep 'plane0' sep 'Fall.mat'] );
+    data = load([suite2ppath filesep 'plane0' filesep 'Fall.mat'] );
     ly = data.ops.Ly;
     lx = data.ops.Lx;
     [roisMask, roisCoord, neuronEachPlane] = func_loadRoi(varargin{:},'xlen',lx,'ylen',ly);
@@ -53,7 +52,7 @@ switch p.Results.dataType
 case 'suite2p' % suite2p only support one functional channel!!!
     nFrames = nan(nFiles,1);%nFrames_add = nan(nFiles,1);
     for i=1:nFiles
-        sbxread([sbxpath sep filenames{i}],1,1);
+        sbxread([sbxpath filesep filenames{i}],1,1);
         nFrames(i) = info.max_idx; 
     end
 
@@ -62,7 +61,7 @@ case 'suite2p' % suite2p only support one functional channel!!!
         nFramesPlane = sum(nFrames_oneplane(:,i));
          
         %check if nb of frames per plane computed is true in suite2p files
-        data = load([suite2ppath sep 'plane' num2str(i-1) sep 'Fall.mat'] );
+        data = load([suite2ppath filesep 'plane' num2str(i-1) filesep 'Fall.mat'] );
         nFramesPlaneCheck = size(data.F,2);
         if nFramesPlaneCheck==nFramesPlane
            disp(['Correct nb of frame for plane ' num2str(i) '. Good to go!']);
@@ -71,9 +70,9 @@ case 'suite2p' % suite2p only support one functional channel!!!
         end
         for chan = 1:nFuncChannel
             if chan == 1
-                fileID = fopen([suite2ppath sep 'plane' num2str(i-1) sep 'data.bin'],'r'); % open binary file 
+                fileID = fopen([suite2ppath filesep 'plane' num2str(i-1) filesep 'data.bin'],'r'); % open binary file 
             else 
-                fileID = fopen([suite2ppath sep 'plane' num2str(i-1) sep 'data_chan' int2str(chan) '.bin'],'r'); % open binary file 
+                fileID = fopen([suite2ppath filesep 'plane' num2str(i-1) filesep 'data_chan' int2str(chan) '.bin'],'r'); % open binary file 
             end
             % get roi and preallocate resource
             rois = roisMask{chan,i};
@@ -109,13 +108,13 @@ case 'suite2p' % suite2p only support one functional channel!!!
             % save data. file name are different depending on # of channels
             if nFuncChannel>1
                 
-                save([datapath sep mouse '_TC_plane' num2str(i-1) '_' functionalChannel{chan} '.mat'],'TC','-v7.3');
-                if neuropilFlag;save([datapath sep mouse '_neuroPil_plane' num2str(i-1) '_' functionalChannel{chan} '.mat'],'neuroPil','-v7.3');end
+                save([datapath filesep mouse '_TC_plane' num2str(i-1) '_' functionalChannel{chan} '.mat'],'TC','-v7.3');
+                if neuropilFlag;save([datapath filesep mouse '_neuroPil_plane' num2str(i-1) '_' functionalChannel{chan} '.mat'],'neuroPil','-v7.3');end
                 tcFilename{chan,i} = [mouse '_TC_plane' num2str(i-1) '_' functionalChannel{chan} '.mat'];
 
             else
-                save([datapath sep mouse '_TC_plane' num2str(i-1) '.mat'],'TC','-v7.3');
-                if neuropilFlag;save([datapath sep mouse '_neuroPil_plane' num2str(i-1) '.mat'],'neuroPil','-v7.3');end
+                save([datapath filesep mouse '_TC_plane' num2str(i-1) '.mat'],'TC','-v7.3');
+                if neuropilFlag;save([datapath filesep mouse '_neuroPil_plane' num2str(i-1) '.mat'],'neuroPil','-v7.3');end
                 tcFilename{1,i} = [mouse '_TC_plane' num2str(i-1) '.mat'];
             end
             fclose all;

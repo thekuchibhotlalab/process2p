@@ -18,7 +18,7 @@ load('C:\Users\zzhu34\Documents\tempdata\excitData\cd036\TC\cd036_TC_plane0.mat'
 load('C:\Users\zzhu34\Documents\tempdata\excitData\cd036\roi\ishere_plane0.mat','ishere');
 ishere = ishere{1};
 [nFrames, nFrames_oneplane] = func_readnFrames('cd036','root',...
-    'C:\Users\zzhu34\Documents\tempdata\excitData\config\mouse');
+    'C:\Users\zzhu34\Documents\tempdaawta\excitData\config\mouse');
 nFrames = [0 0; nFrames];
 
 for i = 1:size(nFrames,1)-1

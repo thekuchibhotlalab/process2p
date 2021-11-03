@@ -1,5 +1,5 @@
 function func_spikeDeconv(TC, varargin)
-
+% OUTDATED -- use deconvolveDff instead
 if isempty(varargin)
     [c, s, options] = deconvolveCa(submat(k,:),'constrained','ar1', 0.9381,...
         'optimize_b','optimize_pars');% time x one cell
