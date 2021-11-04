@@ -1,4 +1,4 @@
-function [filenameSelIdx,filenameFrames,fileMultiLoadFlag] = fn_paramPreviewFileSameFlag(configTable,filenames,imagingConfig,targEntry)
+function [filenameSelFlag,filenameFrames,fileMultiLoadFlag] = fn_paramPreviewFileSameFlag(configTable,filenames,imagingConfig,targEntry)
 
 filenameIdx = cellfun(@(x)(find(strcmp(configTable.ImagingFile,x))),filenames);
 
@@ -13,9 +13,17 @@ if length(nUnique) == 1
     filenamesCommon = configTable.ImagingFile(filenameFlagCommon);
     nFrames_oneplaneCommon = configTable.nFrames_oneplane(filenameFlagCommon);
     
-    filenameSelIdx = cellfun(@(x)(find(strcmp(filenamesCommon,x))),filenames);
-    filenameFrames = fn_readnFramesStr(nFrames_oneplaneCommon,imagingConfig.nPlanes);
-    fileMultiLoadFlag = false;
+    filenameIdx = cellfun(@(x)(find(strcmp(filenamesCommon,x))),filenames);
+    filenameSelFlag = false(size(filenamesCommon)); filenameSelFlag(filenameIdx) = true;
+
+    if ~iscell(nFrames_oneplaneCommon); nFrames_oneplaneCommon = {nFrames_oneplaneCommon}; end
+    for i = 1:length(nFrames_oneplaneCommon)
+        nFrames_oneplane_StrSplit = strsplit(nFrames_oneplaneCommon{i});
+        for j = 1:str2double(imagingConfig.nPlanes)
+            filenameFrames(i,j) = str2double(nFrames_oneplane_StrSplit{j}); %#ok<*AGROW>
+        end
+    end
+
 else
     disp('Selected files have the DIFFERENT TC. Loading different TC for each individual session.');
     msgbox('UNDER CONSTRUCTION!');
@@ -25,10 +33,19 @@ else
         % nFrames_oneplane_load is used to load TC file corresponding to selected files 
         filenamesCommon = configTable.ImagingFile(filenameFlagCommon);
         filenameSelIdx(i) = find(strcmp(filenamesCommon,filenames{i}));
+        
         nFrames_oneplaneCommon = configTable.nFrames_oneplane(filenameFlagCommon);
-        filenameFrames{i} = fn_readnFramesStr(nFrames_oneplaneCommon,imagingConfig.nPlanes);  %#ok<*AGROW>
+        if ~iscell(nFrames_oneplaneCommon); nFrames_oneplaneCommon = {nFrames_oneplaneCommon}; end
+        for k = 1:length(nFrames_oneplaneCommon)
+            nFrames_oneplane_StrSplit = strsplit(nFrames_oneplaneCommon{k});
+            for j = 1:str2double(imagingConfig.nPlanes)
+                filenameFrames{i}(k,j) = str2double(nFrames_oneplane_StrSplit{j}); %#ok<*AGROW>
+            end
+        end   
     end
     fileMultiLoadFlag = true;
 end
+
+
 
 end

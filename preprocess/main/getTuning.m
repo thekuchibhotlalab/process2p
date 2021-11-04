@@ -154,7 +154,7 @@ end
 fn_getTuningPopulation(tuning,popTuning,nNeuron,nPlanes, neuronEachPlane,...
     neuronPlane,toneLabel,toneindex,refImg,roisBound,savePath);
 %---------PLOT SIGNICANT TEST RESULTS ON POPULATION LEVEL-----------
-allDataName = {'tuning','popTuning','neuronEachPlane','TC_pretone_reorder','toneLabel'};
+allDataName = {'tuning','popTuning','neuronEachPlane','TCpretone_reorder','toneLabel'};
 save([savePath '/population/tuning.mat'],allDataName{:});
 %---------PLOT SIGNICANT TEST RESULTS ON POPULATION LEVEL-----------
 if ~isempty(fn2); feval(fn2); end 

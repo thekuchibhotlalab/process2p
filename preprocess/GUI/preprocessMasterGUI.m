@@ -234,11 +234,11 @@ paramValueDisplay = cellfun(@(x)(fn_cellStrJoin(x)),paramValue,'UniformOutput',f
 
 % get the filename selected, and the table of information
 paramValue = [paramValue;'filename';strjoin(filenames);'filenameIdx';filenameIdx;'nFiles';length(filenames)];
-[tempFilenameFlag,filenameFrames] = fn_paramPreviewFileSameFlag(configTable,filenames,imagingConfig,'tcFile');
-paramValue = [paramValue;'filenameTCFlag';tempFilenameFlag;'nFrames_oneplane_TC';filenameFrames];
+[tempFilenameFlag,filenameFrames,fileMultiLoadFlag] = fn_paramPreviewFileSameFlag(configTable,filenames,imagingConfig,'tcFile');
+paramValue = [paramValue;'filenameTCIdx';tempFilenameFlag;'fileMultiLoadTCFlag';fileMultiLoadFlag;'nFrames_oneplane_TC';{filenameFrames}];
 %paramValue = [paramValue;'filenameTC';strjoin(filenameSel);'filenameTCFlag';tempFilenameFlag;'nFrames_oneplane_TC';filenameFrames];
-[tempFilenameFlag,filenameFrames] = fn_paramPreviewFileSameFlag(configTable,filenames,imagingConfig,'suite2ppath');
-paramValue = [paramValue;'filenameBinFlag';tempFilenameFlag;'nFrames_oneplane_bin';filenameFrames];
+[tempFilenameFlag,filenameFrames,fileMultiLoadFlag] = fn_paramPreviewFileSameFlag(configTable,filenames,imagingConfig,'suite2ppath');
+paramValue = [paramValue;'filenameBinIdx';tempFilenameFlag;'fileMultiLoadTCFlag';fileMultiLoadFlag;'nFrames_oneplane_bin';{filenameFrames}];
 %paramValue = [paramValue;'filenameBin';strjoin(filenameSel);'filenameBinFlag';tempFilenameFlag;'nFrames_oneplane_bin';filenameFrames];
 
 % get all the path and files needed

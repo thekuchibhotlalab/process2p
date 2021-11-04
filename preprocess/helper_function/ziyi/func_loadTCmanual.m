@@ -19,7 +19,7 @@ else
 end
 nFrames_oneplane = p.Results.nFrames_oneplane_TC;
 nFrames_oneplane_cumsum = [zeros(1,nPlanes); cumsum(nFrames_oneplane,1)];
-nFrames_oneplane_select = nFrames_oneplane(logical(p.Results.filenameTCFlag),:);
+%nFrames_oneplane_select = nFrames_oneplane(logical(p.Results.filenameTCFlag),:);
 
 
 tcFileSplit = strsplit(p.Results.tcFile);
@@ -38,7 +38,7 @@ for i = 1:nFuncChannel
         
         
         
-        fileIndex = find(p.Results.filenameTCFlag==1);
+        fileIndex = p.Results.filenameTCIdx;
         for k = 1:p.Results.nFiles
             frameIndex_thisPlane = (nFrames_oneplane_cumsum(fileIndex(k),j)+1):nFrames_oneplane_cumsum(fileIndex(k)+1,j); 
             TC_thisPlane{k,j} = tempTC(:,frameIndex_thisPlane);
