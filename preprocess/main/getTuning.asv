@@ -124,6 +124,7 @@ tuning.meanSEM = squeeze(nanstd(toneAct,0,2))/sqrt(size(toneAct,2));
 tuning.significance = cellfun(@(x,y)(fn_significanceTest(toneAct,baseAct,x,y,toneLabel)),...
     significanceTestList,significanceTestAlpha,'UniformOutput',false);
 if contains('roc',snrAnalysisList); tuning.roc = fn_roc(toneAct,baseAct_noAvg); end
+
 %---------SELECT CRITERIA FOR RESPONSIVE CELL-----------
 tuning.responsiveCellFlag = tuning.significance{1}.signif;
 tuning.responsiveCellToneFlag = tuning.significance{1}.toneH;
@@ -145,14 +146,13 @@ for i = 1:nPlanes
     data = load([suite2ppath sep 'plane' num2str(i-1) sep 'Fall.mat']); 
     refImg{i} = data.ops.meanImg;
 end
-%---------PLOT TONOTOPY AND POPULATION STATISTICS-----------
+%---------PLOT TONOTOPY AND POPULATION S-----------
 fn_getTuningPopulation(tuning,popTuning,nNeuron,nPlanes, neuronEachPlane,...
     neuronPlane,toneLabel,toneindex,refImg,roisBound,savePath);
-%---------SAVE RELEVANT DATA-----------
-if ~exist('allDataName');  allDataName = {'tuning','popTuning','neuronEachPlane',...
-        'peakFrames','TCpretone_reorder','toneLabel'}; end
+%---------PLOT SIGNICANT TEST RESULTS ON POPULATION LEVEL-----------
+allDataName = {'tuning','popTuning','neuronEachPlane','TCpretone_reorder','toneLabel'};
 save([savePath '/population/tuning.mat'],allDataName{:});
-%---------RUN USER DEFINED ANALYTICAL FUNCTION FN2-----------
+%---------PLOT SIGNICANT TEST RESULTS ON POPULATION LEVEL-----------
 if ~isempty(fn2); feval(fn2); end 
 %---------PLOT SINGLE NEURON-----------
 if saveSingleNeuronFlag 

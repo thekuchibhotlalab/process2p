@@ -18,7 +18,6 @@ if length(nUnique) == 1
     fileMultiLoadFlag = false;
 else
     disp('Selected files have the DIFFERENT TC. Loading different TC for each individual session.');
-    msgbox('UNDER CONSTRUCTION!');
     for i = 1:length(filenameIdx)
         targEntryThisFile = configTable.(targEntry)(filenameIdx(i));
         filenameFlagCommon = strcmp(configTable.(targEntry),targEntryThisFile);

@@ -5,7 +5,7 @@ currStr = allStr{get(handles.fnSelectionMenu,'Value')};
 switch currStr
     case 'getTuning'
         if length(filenames) ~=1 
-            disp('ERROR: Please select only one file');
+            msgbox('WARNING -- Please select only one file for getTuning');
         end
         %filename = filenames{1};  
 end
