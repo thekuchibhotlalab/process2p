@@ -32,6 +32,8 @@ caxis([prctile(trialMean(:),5) prctile(trialMean(:),95)])
 yticklabels([]);title('Mean Tone Evoked')
 saveas(gcf,[ savePath ...
         '/population/populationTonePSTH.png']);
+saveas(gcf,[ savePath ...
+    '/population/populationTonePSTH.fig']);
 
 %---------PLOT PEAK FRAME-----------
 latFig = figure; set(gcf, 'Units', 'Normalized', 'OuterPosition', [0.15, 0.04, 0.45, 0.56]);% Enlarge figure to full screen.
@@ -51,5 +53,7 @@ subplot(2,2,4); plot(toneMean,'Color',[0.8 0.8 0.8]);hold on; plot(mean(toneMean
 xticks(frameAxis); xticklabels(frameLabel); xlim([0 nFramesPerTone])
 ylabel('dff');title('population average dff'); 
 saveas(gcf,[ savePath ...
-        '/population/populationTonePeak.png']);    
+        '/population/populationTonePeak.png']); 
+saveas(gcf,[ savePath ...
+    '/population/populationTonePeak.fig']); 
 end

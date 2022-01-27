@@ -17,7 +17,6 @@ C = colormap('jet');colormapIndex = round(linspace(1,size(C,1),nTones));
 for j = 1:nPlanes
     for i = 1:neuronEachPlane(j)
         tic;
-
         tuningFig = figure('visible','off');
         set(gcf, 'Units', 'Normalized', 'OuterPosition', [0.15, 0.04, 0.6, 0.9]);% Enlarge figure to full screen.
         cellIndex = neuronPlane(j) + i;
@@ -47,8 +46,15 @@ for j = 1:nPlanes
         end
 
         timeAxis = (0:nFramesPerTrial-1) * nPlanes / 30;
-        p1 = plot(timeAxis, trialMedianTrialTC(:,cellIndex),'LineWidth',1.2,'color',[0.0000 0.4470 0.7410]);
-        p2 = plot(timeAxis, trialMeanTrialTC(:,cellIndex),'LineWidth',1.2,'color',[0.8500 0.3250 0.0980]);
+        
+        tempNTones = 8; colormapIndex = round(linspace(1,64,17)); 
+        jjet = jet; toneColor = jjet(colormapIndex,:);
+        for k = 1:tempNTones
+            tempIdx =((k-1)*50+1):(k*50);
+            p1 = plot(timeAxis(tempIdx), trialMedianTrialTC(tempIdx,cellIndex),'LineWidth',3,'color',toneColor(k*2,:));
+        end
+        %p1 = plot(timeAxis, trialMedianTrialTC(:,cellIndex),'LineWidth',1.2,'color',[0.0000 0.4470 0.7410]);
+        %p2 = plot(timeAxis, trialMeanTrialTC(:,cellIndex),'LineWidth',1.2,'color',[0.8500 0.3250 0.0980]);
         yMax = 0.7 * max(trialMedianTrialTC(:,cellIndex)) + 0.3 * max(max(TC_trial(1:tempSampleRate:nFramesPerTrial,:,cellIndex)));
         yMin = 0.7 * min(trialMeanTrialTC(:,cellIndex)) + 0.3 * min(min(TC_trial(1:tempSampleRate:nFramesPerTrial,:,cellIndex)));
         onsetTime = (1:nFramesPerTone:nFramesPerTrial) * nPlanes / 30;

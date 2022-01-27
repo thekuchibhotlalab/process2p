@@ -1,9 +1,10 @@
-function sbx2h5cropdir(fname,targetDir,varargin)
+function sbx2h5cropdir(fname,targetDir,channel,varargin)
 
 % sbx2h5
 % Generates h5 file from sbx files
 
-x_crop_start = 1; %x-value to start strips
+if nargin <3; channel = 1; end
+x_crop_start = 110; %x-value to start strips
 x_crop_end = 0;
 y_crop_start = 100; %y-value to start strips
 y_crop_end = 0; % take y from 100:755
@@ -29,7 +30,7 @@ to_read = min(blksize,N-k);
 while(~done && to_read>0)
 try
 q = sbxread(fname,k,to_read);
-q = squeeze(q(1,:,:,:)); % extract green channel only
+q = squeeze(q(channel,:,:,:)); % extract green channel only
 q = permute(q,[2 1 3]);
 q = q(y_crop_start:(end-y_crop_end),x_crop_start:(end-x_crop_end),:); %crop optotune and bidi
 if(k==0)
