@@ -45,6 +45,10 @@ case 'manual'
     [roisMask, roisCoord, neuronEachPlane] = func_loadRoi(varargin{:},'xlen',lx,'ylen',ly);
 case 'suite2p'
     disp('Work in progress!')
+    data = load([suite2ppath filesep 'plane0' filesep 'Fall.mat'] );
+    ly = data.ops.Ly;
+    lx = data.ops.Lx;
+    [roisMask, roisCoord, neuronEachPlane] = func_loadRoi(varargin{:},'xlen',lx,'ylen',ly);
 end
 %---------EXTRACT BASED ON DATA TYPE-----------
 tcFilename = cell(nFuncChannel,nPlanes);
@@ -66,7 +70,7 @@ case 'suite2p' % suite2p only support one functional channel!!!
         if nFramesPlaneCheck==nFramesPlane
            disp(['Correct nb of frame for plane ' num2str(i) '. Good to go!']);
         else
-           error(['Bad nb of frame computed for plane ' num2str(i) ', check it out!']);
+           msgbox(['Bad nb of frame computed for plane ' num2str(i) ', check it out!'],'Error');
         end
         for chan = 1:nFuncChannel
             if chan == 1

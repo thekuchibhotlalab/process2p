@@ -14,7 +14,7 @@ fnh = [targetDir '\' fname ,'.h5'];
 z = sbxread(fname,1,1);
 global info;
  
-if(nargin>2)
+if(nargin>3)
 N = min(varargin{1},info.max_idx);
 else
 N = info.max_idx;
@@ -23,7 +23,7 @@ end
 k = 0;
 done = 0;
  
-blksize = 200; % block size
+blksize = 2000; % block size
  
 to_read = min(blksize,N-k);
  
@@ -45,7 +45,7 @@ done = 1;
 delete(f);
 end
 k = k+to_read;
-to_read = min(blksize,N-k);
+to_read = min(blksize,N-k); 
 waitbar(k/N,f);
 end
  

@@ -117,7 +117,9 @@ for j = 1:nPlanes
 
         saveas(tuningFig,[savePath ...
             '/singleNeuron/Neuron' num2str(cellIndex,'%03d') '.png']);
-            
+        saveas(tuningFig,[savePath ...
+            '/singleNeuron/Neuron' num2str(cellIndex,'%03d') '.fig']);
+        
         close(tuningFig);
         timeElapsed = toc;
 

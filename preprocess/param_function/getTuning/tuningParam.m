@@ -49,5 +49,6 @@ toneActSumBin = 1:ceil(0.33 * frameRate);
 significanceTestList = {'signrank','ttest','anova'};
 significanceTestAlpha = {0.01,0.01,0.05};
 snrAnalysisList = {'roc'};
+otherAnalysisList = {'suppression'};
 % ---------------------------- Selection of Figure-----------------------
 saveSingleNeuronFlag = true;

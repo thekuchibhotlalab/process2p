@@ -24,9 +24,13 @@ switch p.Results.roiMethod
             roisMask{1,j} = cell(1,length(tempRoi{j}));
             for k = 1:length(tempRoi{j}) % neuron in each plane 
                 bound = boundary(double(tempRoi{j}{k}.xpix)', double(tempRoi{j}{k}.ypix)',1); % restricted bound
-                tempCoord = [tempRoi{j}{k}.xpix(bound) tempRoi{j}{k}.ypix(bound)];
-                roisCoord{1,j}{k} = tempCoord;
-                roisMask{1,j}{k} = [double(tempRoi{j}{k}.xpix), double(tempRoi{j}{k}.ypix)];
+                tempCoord = [tempRoi{j}{k}.xpix(bound);tempRoi{j}{k}.ypix(bound)];
+                roisCoord{1,j}{k} = double(tempCoord);
+                temp = zeros(xlen,ylen);
+                for l = 1:length(tempRoi{j}{k}.xpix)
+                     temp(tempRoi{j}{k}.xpix(l),tempRoi{j}{k}.ypix(l)) = 1;
+                end
+                roisMask{1,j}{k} =logical(temp);
             end
         end
     case 'manual'

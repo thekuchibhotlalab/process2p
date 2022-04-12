@@ -53,10 +53,10 @@ for i = 1:nPlanes
         maxProj(xStart+1:xStart+size(ops.max_proj,1), yStart+1:yStart+size(ops.max_proj,2)) = double(ops.max_proj);
         
         if nFuncChannel>1
-            imwrite(double(ops.meanImgE),[imgPath sep 'meanImgE_plane' int2str(i-1) '_' functionalChannel{chan} '.tiff'])
+            imwrite(fn_convert2uint16(ops.meanImgE),[imgPath sep 'meanImgE_plane' int2str(i-1) '_' functionalChannel{chan} '.tiff'])
             imwrite(uint16(maxProj),[imgPath sep 'maxProj_plane' int2str(i-1) '_' functionalChannel{chan} '.tiff'])
         else
-            imwrite(double(ops.meanImgE),[imgPath sep 'meanImgE_plane' int2str(i-1) '.tiff'])
+            imwrite(fn_convert2uint16(ops.meanImgE),[imgPath sep 'meanImgE_plane' int2str(i-1) '.tiff'])
             imwrite(uint16(maxProj),[imgPath sep 'maxProj_plane' int2str(i-1) '.tiff'])
         end
     end

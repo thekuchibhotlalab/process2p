@@ -44,7 +44,8 @@ switch p.Results.tcMethod
         TC = suite2pTC;
         neuronEachPlane = {neuronEachPlane};
     case 'manual'
-        [TC, neuronEachPlane] = func_loadTCmanual(varargin{:});      
+        [TC, neuronEachPlane] = func_loadTCmanual(varargin{:}); 
+        neuronEachPlane = {neuronEachPlane};
 end
 totalTime = toc;
 disp(['Loading Complete. Time = ' num2str(totalTime,'%.2f')]);
