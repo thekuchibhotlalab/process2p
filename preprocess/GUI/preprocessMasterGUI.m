@@ -214,6 +214,7 @@ function paramPreviewButton_Callback(hObject, eventdata, handles)
 % LOAD config table
 configTable = getConfigTable(handles);
 configTable = func_fillMissingTable(configTable);
+configTable = fn_correctConfigTableMisc(configTable);
 % READ and check filenames
 filenames = get(handles.fileListBox,'String');if ~iscell(filenames);filenames = {filenames};end
 filenameIdx = cellfun(@(x)(find(strcmp(configTable.ImagingFile,x))),filenames);

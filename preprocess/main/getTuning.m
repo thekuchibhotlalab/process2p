@@ -76,6 +76,8 @@ end
 function getTuning_oneChannel(TCraw,neuronEachPlane,roisBound,savePath,suite2ppath,fn1,fn2)
 
 %---------DECLARE SOME PARAMETERS-----------
+if iscell(TCraw) && length(TCraw)==1; TCraw = TCraw{1}; end
+if size(TCraw,1)<size(TCraw,2); TCraw = TCraw'; end
 global nPlanes
 sep = '\';
 sumTC = sum(TCraw(1:end-1,:),1); 
@@ -125,10 +127,8 @@ tuning.meanSEM = squeeze(nanstd(toneAct,0,2))/sqrt(size(toneAct,2));
 tuning.significance = cellfun(@(x,y)(fn_significanceTest(toneAct,baseAct,x,y,toneLabel)),...
     significanceTestList,significanceTestAlpha,'UniformOutput',false);
 disp('Significance tests SUCCESSFUL!')
-if exist('snrAnalysisList') && contains('roc',snrAnalysisList); tuning.roc = fn_roc(toneAct,baseAct_noAvg); end
-disp('SNR analysis SUCCESSFUL!')
-if exist('otherAnalysisList') && contains('suppresion',otherAnalysisList); tuning.suppression = fn_suppresion(toneAct,baseAct_noAvg); end
-disp('Other analysis SUCCESSFUL!')
+if exist('snrAnalysisList') && contains('roc',snrAnalysisList); tuning.roc = fn_roc(toneAct,baseAct_noAvg); disp('SNR analysis SUCCESSFUL!'); end
+if exist('otherAnalysisList') && contains('suppresion',otherAnalysisList); tuning.suppression = fn_suppresion(toneAct,baseAct_noAvg); disp('Other analysis SUCCESSFUL!');  end
 %---------SELECT CRITERIA FOR RESPONSIVE CELL-----------
 tuning.responsiveCellFlag = tuning.significance{1}.signif;
 tuning.responsiveCellToneFlag = tuning.significance{1}.toneH;
@@ -142,6 +142,7 @@ popTuning.responsiveCount = sum(tuning.responsiveCellToneFlag,2);
 popTuning.bfMedian = bfIdx; popTuning.bfCountMedian = histcounts(bfIdx,0.5:1:nTones+0.5);
 [~,bfIdx] = max(tuning.mean,[],1);
 popTuning.bfMean = bfIdx; popTuning.bfCountMean = histcounts(bfIdx,0.5:1:nTones+0.5);
+disp('Tuning curve SUCCESSFUL!')
 %---------SAVE RELEVANT DATA-----------
 if ~exist('allDataName');  allDataName = {'tuning','popTuning','neuronEachPlane',...
         'peakFrames','TCpretone_reorder','toneLabel'}; end
