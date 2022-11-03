@@ -12,7 +12,7 @@ trialMedianTrialTC = reshape(trialMedian,[nFramesPerTrial,nNeuron]);
 neuronPlane = cumsum(neuronEachPlane);
 try  neuronPlane = [0;neuronPlane];
 catch;  neuronPlane = [0 neuronPlane];disp('check this'); end
-C = colormap('jet');colormapIndex = round(linspace(1,size(C,1),nTones));
+tempF = figure; C = colormap('jet'); close tempF; colormapIndex = round(linspace(1,size(C,1),nTones));
 
 for j = 1:nPlanes
     for i = 1:neuronEachPlane(j)

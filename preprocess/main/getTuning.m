@@ -124,8 +124,11 @@ tuning.meanSEM = squeeze(nanstd(toneAct,0,2))/sqrt(size(toneAct,2));
 %---------SIGNIFICANCE TESTING-----------
 tuning.significance = cellfun(@(x,y)(fn_significanceTest(toneAct,baseAct,x,y,toneLabel)),...
     significanceTestList,significanceTestAlpha,'UniformOutput',false);
+disp('Significance tests SUCCESSFUL!')
 if exist('snrAnalysisList') && contains('roc',snrAnalysisList); tuning.roc = fn_roc(toneAct,baseAct_noAvg); end
+disp('SNR analysis SUCCESSFUL!')
 if exist('otherAnalysisList') && contains('suppresion',otherAnalysisList); tuning.suppression = fn_suppresion(toneAct,baseAct_noAvg); end
+disp('Other analysis SUCCESSFUL!')
 %---------SELECT CRITERIA FOR RESPONSIVE CELL-----------
 tuning.responsiveCellFlag = tuning.significance{1}.signif;
 tuning.responsiveCellToneFlag = tuning.significance{1}.toneH;
@@ -139,6 +142,11 @@ popTuning.responsiveCount = sum(tuning.responsiveCellToneFlag,2);
 popTuning.bfMedian = bfIdx; popTuning.bfCountMedian = histcounts(bfIdx,0.5:1:nTones+0.5);
 [~,bfIdx] = max(tuning.mean,[],1);
 popTuning.bfMean = bfIdx; popTuning.bfCountMean = histcounts(bfIdx,0.5:1:nTones+0.5);
+%---------SAVE RELEVANT DATA-----------
+if ~exist('allDataName');  allDataName = {'tuning','popTuning','neuronEachPlane',...
+        'peakFrames','TCpretone_reorder','toneLabel'}; end
+save([savePath '/population/tuning.mat'],allDataName{:});
+disp('Save data SUCCESSFUL!')
 %---------LOAD FOV IMAGE FOR TONOTOPY PLOT-----------
 neuronPlane = cumsum(neuronEachPlane);
 try  neuronPlane = [0;neuronPlane];
@@ -150,10 +158,7 @@ end
 %---------PLOT TONOTOPY AND POPULATION STATISTICS-----------
 fn_getTuningPopulation(tuning,popTuning,nNeuron,nPlanes, neuronEachPlane,...
     neuronPlane,toneLabel,toneindex,refImg,roisBound,savePath);
-%---------SAVE RELEVANT DATA-----------
-if ~exist('allDataName');  allDataName = {'tuning','popTuning','neuronEachPlane',...
-        'peakFrames','TCpretone_reorder','toneLabel'}; end
-save([savePath '/population/tuning.mat'],allDataName{:});
+
 %---------RUN USER DEFINED ANALYTICAL FUNCTION FN2-----------
 if ~isempty(fn2); feval(fn2); end 
 %---------PLOT SINGLE NEURON-----------
